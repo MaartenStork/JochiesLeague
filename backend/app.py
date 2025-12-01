@@ -1,6 +1,6 @@
 import os
 import math
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 
 from flask import Flask, redirect, url_for, session, request, jsonify
@@ -88,6 +88,24 @@ def api_login_required(f):
             return jsonify({'error': 'Not authenticated'}), 401
         return f(*args, **kwargs)
     return decorated_function
+
+def format_utc_time(dt):
+    """Format datetime as ISO string with Z suffix to indicate UTC."""
+    return dt.isoformat() + 'Z' if dt else None
+
+def cleanup_old_photos():
+    """Delete photo data from check-ins older than 24 hours to save storage."""
+    cutoff_time = datetime.utcnow() - timedelta(hours=24)
+    old_checkins = CheckIn.query.filter(
+        CheckIn.check_in_time < cutoff_time,
+        CheckIn.photo_data.isnot(None)
+    ).all()
+    
+    for checkin in old_checkins:
+        checkin.photo_data = None
+    
+    if old_checkins:
+        db.session.commit()
 
 # ============ AUTH ROUTES ============
 
@@ -181,7 +199,7 @@ def verify_location():
     if existing:
         return jsonify({
             'error': 'Already checked in today',
-            'check_in_time': existing.check_in_time.isoformat()
+            'check_in_time': existing.check_in_time.isoformat() + 'Z'
         }), 400
     
     return jsonify({
@@ -229,7 +247,7 @@ def checkin():
     if existing:
         return jsonify({
             'error': 'Already checked in today',
-            'check_in_time': existing.check_in_time.isoformat()
+            'check_in_time': existing.check_in_time.isoformat() + 'Z'
         }), 400
     
     # Create check-in with photo
@@ -247,7 +265,7 @@ def checkin():
     return jsonify({
         'success': True,
         'message': 'Checked in successfully!',
-        'check_in_time': checkin.check_in_time.isoformat(),
+        'check_in_time': checkin.check_in_time.isoformat() + 'Z',
         'distance': round(distance, 1)
     })
 
@@ -264,7 +282,7 @@ def get_status():
     if checkin:
         return jsonify({
             'checked_in': True,
-            'check_in_time': checkin.check_in_time.isoformat()
+            'check_in_time': checkin.check_in_time.isoformat() + 'Z'
         })
     return jsonify({'checked_in': False})
 
@@ -273,6 +291,9 @@ def get_status():
 @app.route('/api/leaderboard')
 def get_leaderboard():
     """Get today's leaderboard."""
+    # Clean up photos older than 24 hours
+    cleanup_old_photos()
+    
     today = date.today()
     checkins = CheckIn.query.filter_by(check_in_date=today)\
         .order_by(CheckIn.check_in_time.asc())\
@@ -284,7 +305,7 @@ def get_leaderboard():
             'rank': i + 1,
             'name': checkin.user.name,
             'picture': checkin.user.picture,
-            'check_in_time': checkin.check_in_time.isoformat(),
+            'check_in_time': checkin.check_in_time.isoformat() + 'Z',
             'photo': checkin.photo_data
         })
     
@@ -317,7 +338,7 @@ def get_history():
                 'rank': i + 1,
                 'name': c.user.name,
                 'picture': c.user.picture,
-                'check_in_time': c.check_in_time.isoformat()
+                'check_in_time': c.check_in_time.isoformat() + 'Z'
             } for i, c in enumerate(checkins)]
         }
         history.append(day_data)
