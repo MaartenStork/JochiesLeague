@@ -14,12 +14,12 @@ from models import db, User, CheckIn
 load_dotenv()
 
 # Science Park Amsterdam coordinates
-# SCIENCE_PARK_LAT = 52.3547
-# SCIENCE_PARK_LNG = 4.9543
+SCIENCE_PARK_LAT = 52.3547
+SCIENCE_PARK_LNG = 4.9543
 # Haarlemmerstraat 58 Amsterdam coordinates (TESTING)
-SCIENCE_PARK_LAT = 52.3803
-SCIENCE_PARK_LNG = 4.8882
-ALLOWED_RADIUS_METERS = 100
+# SCIENCE_PARK_LAT = 52.3803
+# SCIENCE_PARK_LNG = 4.8882
+ALLOWED_RADIUS_METERS = 10000
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
