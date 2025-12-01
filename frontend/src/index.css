@@ -20,17 +20,17 @@
   --bronze: #cd7f32;
 }
 
+html, body {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-}
-
-html {
-  overflow-y: scroll;
 }
 
 /* Animated background */

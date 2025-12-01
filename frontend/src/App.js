@@ -2,6 +2,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Helper to get auth token from localStorage
+const getAuthToken = () => localStorage.getItem('auth_token');
+
+// Helper to get fetch options with auth
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,10 +33,24 @@ function App() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
+  // Check for auth token in URL on first load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('auth_token');
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      // Clean the URL without reloading
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Fetch current user
   const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/user`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/auth/user`, { 
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.authenticated) {
         setUser(data.user);
@@ -39,7 +66,10 @@ function App() {
   const fetchStatus = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_URL}/api/status`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/status`, { 
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.checked_in) {
         setCheckedIn(true);
@@ -87,6 +117,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('auth_token');
     window.location.href = `${API_URL}/auth/logout`;
   };
 
@@ -137,7 +168,7 @@ function App() {
           // Step 1: Verify location
           const res = await fetch(`${API_URL}/api/verify-location`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             credentials: 'include',
             body: JSON.stringify({ latitude, longitude }),
           });
@@ -198,7 +229,7 @@ function App() {
       // Step 2: Complete check-in with photo
       const res = await fetch(`${API_URL}/api/checkin`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           latitude: verifiedLocation.latitude,

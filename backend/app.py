@@ -80,14 +80,39 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     
     return R * c
 
+def get_user_from_token():
+    """Get user from Authorization header token."""
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[7:]
+        from itsdangerous import URLSafeTimedSerializer
+        s = URLSafeTimedSerializer(app.secret_key)
+        try:
+            user_id = s.loads(token, max_age=86400 * 30)  # 30 days
+            return User.query.get(user_id)
+        except:
+            return None
+    return None
+
 def api_login_required(f):
     """Decorator for API endpoints that require login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return jsonify({'error': 'Not authenticated'}), 401
-        return f(*args, **kwargs)
+        # Check session cookie first (desktop)
+        if current_user.is_authenticated:
+            return f(*args, **kwargs)
+        # Check token header (mobile fallback)
+        user = get_user_from_token()
+        if user:
+            return f(*args, **kwargs)
+        return jsonify({'error': 'Not authenticated'}), 401
     return decorated_function
+
+def get_current_user_helper():
+    """Get current user from session or token."""
+    if current_user.is_authenticated:
+        return current_user
+    return get_user_from_token()
 
 def format_utc_time(dt):
     """Format datetime as ISO string with Z suffix to indicate UTC."""
@@ -150,7 +175,14 @@ def auth_callback():
             db.session.commit()
         
         login_user(user)
-        return redirect(frontend_url)
+        
+        # Generate token for mobile (cookies don't work well cross-site)
+        from itsdangerous import URLSafeTimedSerializer
+        s = URLSafeTimedSerializer(app.secret_key)
+        auth_token = s.dumps(user.id)
+        
+        # Redirect with token - frontend will store it and clean the URL
+        return redirect(f"{frontend_url}?auth_token={auth_token}")
     except Exception as e:
         print(f"OAuth error: {e}")
         return redirect(f"{frontend_url}?error=auth_failed")
@@ -164,14 +196,15 @@ def logout():
 @app.route('/auth/user')
 def get_current_user():
     """Get current logged-in user info."""
-    if current_user.is_authenticated:
+    user = get_current_user_helper()
+    if user:
         return jsonify({
             'authenticated': True,
             'user': {
-                'id': current_user.id,
-                'name': current_user.name,
-                'email': current_user.email,
-                'picture': current_user.picture
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'picture': user.picture
             }
         })
     return jsonify({'authenticated': False})
