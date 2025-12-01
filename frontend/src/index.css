@@ -649,62 +649,86 @@ body::before {
 }
 
 /* ============ FLYING JOB EASTER EGG ============ */
-.flying-job {
+.flying-job-wrapper {
   position: fixed;
-  width: 80px;
-  height: 80px;
-  top: 50%;
-  transform: translateY(-50%);
+  width: 100px;
+  height: 100px;
   z-index: 9999;
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flying-job-img {
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
   /* Try to hide black background - remove this if you use remove.bg */
   mix-blend-mode: screen;
 }
 
-.flying-job:hover {
-  transform: translateY(-50%) scale(1.2);
+/* Height variations */
+.flying-job-wrapper.height-top {
+  top: 15%;
 }
 
-.flying-job:active {
-  transform: translateY(-50%) scale(0.9);
+.flying-job-wrapper.height-middle {
+  top: 50%;
 }
 
-.flying-job.from-left {
+.flying-job-wrapper.height-bottom {
+  top: 75%;
+}
+
+/* Animations */
+.flying-job-wrapper.from-left {
   animation: flyFromLeft 3s linear forwards;
 }
 
-.flying-job.from-right {
+.flying-job-wrapper.from-right {
   animation: flyFromRight 3s linear forwards;
 }
 
 @keyframes flyFromLeft {
   0% {
-    left: -100px;
-    transform: translateY(-50%) rotate(0deg);
+    left: -120px;
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
   }
   50% {
-    transform: translateY(-50%) rotate(180deg);
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.1);
   }
   100% {
-    left: calc(100% + 100px);
-    transform: translateY(-50%) rotate(360deg);
+    left: calc(100% + 120px);
+    transform: rotate(360deg);
   }
 }
 
 @keyframes flyFromRight {
   0% {
-    right: -100px;
+    right: -120px;
     left: auto;
-    transform: translateY(-50%) rotate(0deg) scaleX(-1);
+    transform: rotate(0deg) scaleX(-1);
+  }
+  25% {
+    transform: rotate(-90deg) scaleX(-1) scale(1.1);
   }
   50% {
-    transform: translateY(-50%) rotate(-180deg) scaleX(-1);
+    transform: rotate(-180deg) scaleX(-1);
+  }
+  75% {
+    transform: rotate(-270deg) scaleX(-1) scale(1.1);
   }
   100% {
-    right: calc(100% + 100px);
+    right: calc(100% + 120px);
     left: auto;
-    transform: translateY(-50%) rotate(-360deg) scaleX(-1);
+    transform: rotate(-360deg) scaleX(-1);
   }
 }

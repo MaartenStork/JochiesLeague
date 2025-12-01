@@ -120,7 +120,11 @@ function App() {
   // Flying Job easter egg - appears every 5 seconds (change this later!)
   useEffect(() => {
     const interval = setInterval(() => {
-      setJobPosition({ fromLeft: Math.random() > 0.5 });
+      // Random direction and height
+      const fromLeft = Math.random() > 0.5;
+      const heights = ['top', 'middle', 'bottom'];
+      const height = heights[Math.floor(Math.random() * heights.length)];
+      setJobPosition({ fromLeft, height });
       setShowFlyingJob(true);
       // Hide after animation completes (3 seconds)
       setTimeout(() => setShowFlyingJob(false), 3000);
@@ -129,19 +133,22 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleJobClick = () => {
+  const handleJobClick = (e) => {
+    e.stopPropagation();
     // Confetti from both bottom corners!
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { x: 0, y: 1 },
-      angle: 45
+      particleCount: 150,
+      spread: 80,
+      origin: { x: 0.1, y: 1 },
+      angle: 60,
+      colors: ['#00ff88', '#ffd700', '#ff4466', '#00ddaa']
     });
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { x: 1, y: 1 },
-      angle: 135
+      particleCount: 150,
+      spread: 80,
+      origin: { x: 0.9, y: 1 },
+      angle: 120,
+      colors: ['#00ff88', '#ffd700', '#ff4466', '#00ddaa']
     });
     setShowFlyingJob(false);
   };
@@ -484,12 +491,17 @@ function App() {
 
       {/* Flying Job Easter Egg */}
       {showFlyingJob && (
-        <img
-          src="/JobLabubu.png"
-          alt="Job"
-          className={`flying-job ${jobPosition.fromLeft ? 'from-left' : 'from-right'}`}
+        <div 
+          className={`flying-job-wrapper ${jobPosition.fromLeft ? 'from-left' : 'from-right'} height-${jobPosition.height}`}
           onClick={handleJobClick}
-        />
+          onTouchStart={handleJobClick}
+        >
+          <img
+            src="/JobLabubu.png"
+            alt="Job"
+            className="flying-job-img"
+          />
+        </div>
       )}
     </div>
   );
