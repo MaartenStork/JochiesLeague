@@ -1,6 +1,7 @@
 databases:
   - name: jochiesleague-db
     plan: free
+    region: frankfurt
     databaseName: jochiesleague
     user: jochiesleague
 

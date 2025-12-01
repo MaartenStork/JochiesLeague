@@ -24,6 +24,7 @@ class CheckIn(db.Model):
     check_in_time = db.Column(db.DateTime, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
+    photo_data = db.Column(db.Text, nullable=True)  # Base64 encoded photo
     
     __table_args__ = (
         db.UniqueConstraint('user_id', 'check_in_date', name='unique_user_date'),

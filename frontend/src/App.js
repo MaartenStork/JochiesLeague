@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -12,6 +12,13 @@ function App() {
   const [checkingIn, setCheckingIn] = useState(false);
   const [message, setMessage] = useState(null);
   const [gettingLocation, setGettingLocation] = useState(false);
+  
+  // Camera state
+  const [showCamera, setShowCamera] = useState(false);
+  const [verifiedLocation, setVerifiedLocation] = useState(null);
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // Fetch current user
   const fetchUser = useCallback(async () => {
@@ -66,6 +73,15 @@ function App() {
     }
   }, [user, fetchStatus]);
 
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
   const handleLogin = () => {
     window.location.href = `${API_URL}/auth/login`;
   };
@@ -74,13 +90,38 @@ function App() {
     window.location.href = `${API_URL}/auth/logout`;
   };
 
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } }
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setMessage({ type: 'error', text: 'Could not access camera. Please allow camera permissions.' });
+      setShowCamera(false);
+      setVerifiedLocation(null);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+    setVerifiedLocation(null);
+  };
+
   const handleCheckIn = async () => {
     if (checkedIn || checkingIn) return;
 
     setGettingLocation(true);
     setMessage(null);
 
-    // Get current location
     if (!navigator.geolocation) {
       setMessage({ type: 'error', text: 'Geolocation is not supported by your browser' });
       setGettingLocation(false);
@@ -90,12 +131,11 @@ function App() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         setGettingLocation(false);
-        setCheckingIn(true);
-
         const { latitude, longitude } = position.coords;
 
         try {
-          const res = await fetch(`${API_URL}/api/checkin`, {
+          // Step 1: Verify location
+          const res = await fetch(`${API_URL}/api/verify-location`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -105,13 +145,15 @@ function App() {
           const data = await res.json();
 
           if (res.ok) {
-            setCheckedIn(true);
-            setCheckInTime(data.check_in_time);
+            // Location verified! Show camera
+            setVerifiedLocation({ latitude, longitude, distance: data.distance });
+            setShowCamera(true);
             setMessage({ 
               type: 'success', 
-              text: `✓ Checked in! Distance: ${data.distance}m from Science Park` 
+              text: `📍 Location verified! ${data.distance}m from Science Park` 
             });
-            fetchLeaderboard(); // Refresh leaderboard
+            // Start camera
+            await startCamera();
           } else {
             setMessage({ 
               type: 'error', 
@@ -121,9 +163,7 @@ function App() {
             });
           }
         } catch (err) {
-          setMessage({ type: 'error', text: 'Failed to check in. Try again.' });
-        } finally {
-          setCheckingIn(false);
+          setMessage({ type: 'error', text: 'Failed to verify location. Try again.' });
         }
       },
       (error) => {
@@ -136,6 +176,56 @@ function App() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  };
+
+  const takePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current || !verifiedLocation) return;
+
+    setCheckingIn(true);
+
+    // Capture photo from video
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Convert to base64 (JPEG, reduced quality for smaller size)
+    const photoData = canvas.toDataURL('image/jpeg', 0.7);
+
+    try {
+      // Step 2: Complete check-in with photo
+      const res = await fetch(`${API_URL}/api/checkin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          latitude: verifiedLocation.latitude,
+          longitude: verifiedLocation.longitude,
+          photo: photoData
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setCheckedIn(true);
+        setCheckInTime(data.check_in_time);
+        setMessage({ 
+          type: 'success', 
+          text: `✓ Checked in successfully!` 
+        });
+        stopCamera();
+        fetchLeaderboard();
+      } else {
+        setMessage({ type: 'error', text: data.error });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to check in. Try again.' });
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   const formatTime = (isoString) => {
@@ -164,6 +254,45 @@ function App() {
     );
   }
 
+  // Camera view (full screen overlay)
+  if (showCamera) {
+    return (
+      <div className="camera-overlay">
+        <div className="camera-header">
+          <button className="camera-close" onClick={stopCamera}>✕</button>
+          <span className="camera-title">Take your check-in photo!</span>
+        </div>
+        
+        <div className="camera-view">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="camera-video"
+          />
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+        </div>
+
+        <div className="camera-controls">
+          {message && (
+            <div className={`camera-message ${message.type}`}>
+              {message.text}
+            </div>
+          )}
+          <button 
+            className={`capture-btn ${checkingIn ? 'loading' : ''}`}
+            onClick={takePhoto}
+            disabled={checkingIn}
+          >
+            {checkingIn ? '⏳' : '📸'}
+          </button>
+          <p className="capture-hint">Tap to capture</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="header">
@@ -184,36 +313,33 @@ function App() {
             </button>
           </div>
 
-          <div className="checkin-section">
-            <button
-              className={`checkin-btn ${checkedIn ? 'checked' : ''} ${(checkingIn || gettingLocation) ? 'loading' : ''}`}
-              onClick={handleCheckIn}
-              disabled={checkedIn || checkingIn || gettingLocation}
-            >
-              <span className="checkin-icon">
-                {checkedIn ? '✓' : gettingLocation ? '📍' : checkingIn ? '⏳' : '🎯'}
-              </span>
-              {checkedIn 
-                ? 'Checked In!' 
-                : gettingLocation 
-                  ? 'Getting Location...' 
-                  : checkingIn 
-                    ? 'Checking In...' 
-                    : 'I am at Science Park'}
-            </button>
+          {!checkedIn && (
+            <div className="checkin-section">
+              <button
+                className={`checkin-btn ${(checkingIn || gettingLocation) ? 'loading' : ''}`}
+                onClick={handleCheckIn}
+                disabled={checkingIn || gettingLocation}
+              >
+                <span className="checkin-icon">
+                  {gettingLocation ? '📍' : '🎯'}
+                </span>
+                {gettingLocation ? 'Getting Location...' : 'I am at Science Park'}
+              </button>
 
-            {message && (
-              <div className={`checkin-status ${message.type}`}>
-                {message.text}
-              </div>
-            )}
+              {message && (
+                <div className={`checkin-status ${message.type}`}>
+                  {message.text}
+                </div>
+              )}
+            </div>
+          )}
 
-            {checkedIn && checkInTime && (
-              <div className="checkin-status success">
-                Checked in at {formatTime(checkInTime)}
-              </div>
-            )}
-          </div>
+          {checkedIn && (
+            <div className="checked-in-badge">
+              <span className="badge-icon">✓</span>
+              <span className="badge-text">Checked in at {checkInTime && formatTime(checkInTime)}</span>
+            </div>
+          )}
         </>
       ) : (
         <div className="login-section">
@@ -229,36 +355,69 @@ function App() {
         </div>
       )}
 
-      <div className="leaderboard">
-        <h2 className="leaderboard-title">
-          🏆 Today's Leaderboard
-          <span className="leaderboard-date">{leaderboardDate && formatDate(leaderboardDate)}</span>
+      {/* Compact Ranking */}
+      <div className="ranking-section">
+        <h2 className="ranking-title">
+          🏆 Today's Ranking
+          <span className="ranking-date">{leaderboardDate && formatDate(leaderboardDate)}</span>
         </h2>
 
         {leaderboard.length === 0 ? (
-          <div className="leaderboard-empty">
+          <div className="ranking-empty">
             No check-ins yet today. Be the first! 🥇
           </div>
         ) : (
-          leaderboard.map((entry) => (
-            <div key={entry.rank} className="leaderboard-entry">
-              <div className={`rank rank-${entry.rank <= 3 ? entry.rank : 'other'}`}>
-                {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : entry.rank}
+          <div className="ranking-list">
+            {leaderboard.slice(0, 5).map((entry) => (
+              <div key={entry.rank} className="ranking-entry">
+                <div className={`rank-badge rank-${entry.rank <= 3 ? entry.rank : 'other'}`}>
+                  {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : entry.rank}
+                </div>
+                <img src={entry.picture} alt={entry.name} className="ranking-avatar" />
+                <span className="ranking-name">{entry.name.split(' ')[0]}</span>
+                <span className="ranking-time">{formatTime(entry.check_in_time)}</span>
               </div>
-              {entry.picture && (
-                <img src={entry.picture} alt={entry.name} className="entry-avatar" />
-              )}
-              <div className="entry-info">
-                <div className="entry-name">{entry.name}</div>
-              </div>
-              <div className="entry-time">{formatTime(entry.check_in_time)}</div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Instagram-style Feed */}
+      {leaderboard.length > 0 && (
+        <div className="feed-section">
+          <h2 className="feed-title">📷 Today's Arrivals</h2>
+          
+          <div className="feed">
+            {leaderboard.map((entry) => (
+              <div key={entry.rank} className="feed-card">
+                <div className="feed-header">
+                  <img src={entry.picture} alt={entry.name} className="feed-avatar" />
+                  <div className="feed-user-info">
+                    <span className="feed-name">{entry.name}</span>
+                    <span className="feed-time">{formatTime(entry.check_in_time)}</span>
+                  </div>
+                  <div className={`feed-rank rank-${entry.rank <= 3 ? entry.rank : 'other'}`}>
+                    {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : `#${entry.rank}`}
+                  </div>
+                </div>
+                
+                <div className="feed-photo-container">
+                  {entry.photo ? (
+                    <img src={entry.photo} alt={`${entry.name}'s check-in`} className="feed-photo" />
+                  ) : (
+                    <div className="feed-photo-placeholder">
+                      <span>📍</span>
+                      <p>No photo</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default App;
-

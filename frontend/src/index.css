@@ -50,6 +50,7 @@ body::before {
   flex-direction: column;
   align-items: center;
   padding: 2rem 1rem;
+  padding-bottom: 4rem;
 }
 
 /* Header */
@@ -85,6 +86,8 @@ body::before {
   border-radius: 1rem;
   margin-bottom: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+  max-width: 500px;
 }
 
 .user-avatar {
@@ -129,18 +132,18 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .checkin-btn {
-  width: 280px;
-  height: 280px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   border: none;
   background: linear-gradient(145deg, var(--accent) 0%, var(--accent-dim) 100%);
   color: var(--bg-primary);
   font-family: inherit;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -176,12 +179,6 @@ body::before {
   box-shadow: none;
 }
 
-.checkin-btn.checked {
-  background: linear-gradient(145deg, #1a3a2a 0%, #0d2a1a 100%);
-  color: var(--accent);
-  border: 3px solid var(--accent);
-}
-
 .checkin-btn.loading {
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -213,6 +210,28 @@ body::before {
   background: rgba(255, 68, 102, 0.1);
   border: 1px solid var(--danger);
   color: var(--danger);
+}
+
+/* Checked In Badge */
+.checked-in-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 255, 136, 0.1);
+  border: 2px solid var(--accent);
+  padding: 1rem 2rem;
+  border-radius: 3rem;
+  margin-bottom: 2rem;
+}
+
+.badge-icon {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.badge-text {
+  font-weight: 600;
+  color: var(--accent);
 }
 
 /* Login Section */
@@ -250,18 +269,226 @@ body::before {
   height: 24px;
 }
 
-/* Leaderboard */
-.leaderboard {
+/* ============ CAMERA OVERLAY ============ */
+.camera-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+}
+
+.camera-close {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 1rem;
+}
+
+.camera-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.camera-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror for selfie */
+}
+
+.camera-controls {
+  padding: 2rem;
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.camera-message {
+  padding: 0.75rem 1.5rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+}
+
+.camera-message.success {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+}
+
+.camera-message.error {
+  background: rgba(255, 68, 102, 0.1);
+  color: var(--danger);
+}
+
+.capture-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid var(--text-primary);
+  background: transparent;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capture-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.capture-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.capture-btn.loading {
+  animation: pulse 1s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.capture-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ============ COMPACT RANKING ============ */
+.ranking-section {
   width: 100%;
   max-width: 500px;
   background: var(--bg-secondary);
   border-radius: 1.5rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 2rem;
 }
 
-.leaderboard-title {
-  font-size: 1.5rem;
+.ranking-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ranking-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.ranking-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 1.5rem;
+}
+
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ranking-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border-radius: 0.75rem;
+  transition: transform 0.2s;
+}
+
+.ranking-entry:hover {
+  transform: translateX(4px);
+}
+
+.rank-badge {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.rank-badge.rank-1 {
+  background: linear-gradient(135deg, var(--gold), #ffaa00);
+  color: #000;
+}
+
+.rank-badge.rank-2 {
+  background: linear-gradient(135deg, var(--silver), #999);
+  color: #000;
+}
+
+.rank-badge.rank-3 {
+  background: linear-gradient(135deg, var(--bronze), #a06020);
+  color: #fff;
+}
+
+.rank-badge.rank-other {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.ranking-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.ranking-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.ranking-time {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ INSTAGRAM-STYLE FEED ============ */
+.feed-section {
+  width: 100%;
+  max-width: 500px;
+}
+
+.feed-title {
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
   display: flex;
@@ -269,86 +496,106 @@ body::before {
   gap: 0.5rem;
 }
 
-.leaderboard-date {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 400;
-}
-
-.leaderboard-empty {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 2rem;
-}
-
-.leaderboard-entry {
+.feed {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-card);
+}
+
+.feed-card {
+  background: var(--bg-secondary);
   border-radius: 1rem;
-  margin-bottom: 0.75rem;
-  transition: transform 0.2s;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.leaderboard-entry:hover {
-  transform: translateX(4px);
-}
-
-.leaderboard-entry:last-child {
-  margin-bottom: 0;
-}
-
-.rank {
-  width: 36px;
-  height: 36px;
+.feed-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-weight: 700;
-  font-size: 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
 }
 
-.rank-1 {
+.feed-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+
+.feed-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.feed-time {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.feed-rank {
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.feed-rank.rank-1 {
   background: linear-gradient(135deg, var(--gold), #ffaa00);
   color: #000;
 }
 
-.rank-2 {
+.feed-rank.rank-2 {
   background: linear-gradient(135deg, var(--silver), #999);
   color: #000;
 }
 
-.rank-3 {
+.feed-rank.rank-3 {
   background: linear-gradient(135deg, var(--bronze), #a06020);
   color: #fff;
 }
 
-.rank-other {
-  background: var(--bg-secondary);
+.feed-rank.rank-other {
+  background: var(--bg-card);
   color: var(--text-secondary);
 }
 
-.entry-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+.feed-photo-container {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.entry-info {
-  flex: 1;
+.feed-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.entry-name {
-  font-weight: 600;
+.feed-photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
 }
 
-.entry-time {
-  color: var(--accent);
-  font-weight: 600;
-  font-size: 0.95rem;
+.feed-photo-placeholder span {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+.feed-photo-placeholder p {
+  font-size: 0.9rem;
 }
 
 /* Loading spinner */
@@ -372,13 +619,25 @@ body::before {
   }
   
   .checkin-btn {
-    width: 220px;
-    height: 220px;
-    font-size: 1.1rem;
+    width: 180px;
+    height: 180px;
+    font-size: 1rem;
   }
   
   .checkin-icon {
     font-size: 2.5rem;
   }
-}
 
+  .user-card {
+    padding: 0.75rem 1rem;
+  }
+
+  .user-name {
+    font-size: 1rem;
+  }
+
+  .ranking-section,
+  .feed-section {
+    padding: 1rem;
+  }
+}

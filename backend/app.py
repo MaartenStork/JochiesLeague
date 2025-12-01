@@ -14,8 +14,11 @@ from models import db, User, CheckIn
 load_dotenv()
 
 # Science Park Amsterdam coordinates
-SCIENCE_PARK_LAT = 52.3547
-SCIENCE_PARK_LNG = 4.9543
+# SCIENCE_PARK_LAT = 52.3547
+# SCIENCE_PARK_LNG = 4.9543
+# Haarlemmerstraat 58 Amsterdam coordinates (TESTING)
+SCIENCE_PARK_LAT = 52.3803
+SCIENCE_PARK_LNG = 4.8882
 ALLOWED_RADIUS_METERS = 100
 
 app = Flask(__name__)
@@ -142,10 +145,10 @@ def get_current_user():
 
 # ============ CHECK-IN ROUTES ============
 
-@app.route('/api/checkin', methods=['POST'])
+@app.route('/api/verify-location', methods=['POST'])
 @api_login_required
-def checkin():
-    """Check in at Science Park."""
+def verify_location():
+    """Verify user is at Science Park (step 1 of check-in)."""
     data = request.get_json()
     
     if not data or 'latitude' not in data or 'longitude' not in data:
@@ -177,13 +180,62 @@ def checkin():
             'check_in_time': existing.check_in_time.isoformat()
         }), 400
     
-    # Create check-in
+    return jsonify({
+        'success': True,
+        'message': 'Location verified! Take a photo to complete check-in.',
+        'distance': round(distance, 1),
+        'latitude': lat,
+        'longitude': lng
+    })
+
+
+@app.route('/api/checkin', methods=['POST'])
+@api_login_required
+def checkin():
+    """Complete check-in with photo (step 2)."""
+    data = request.get_json()
+    
+    if not data or 'latitude' not in data or 'longitude' not in data:
+        return jsonify({'error': 'Missing coordinates'}), 400
+    
+    if not data.get('photo'):
+        return jsonify({'error': 'Photo is required'}), 400
+    
+    lat = data['latitude']
+    lng = data['longitude']
+    photo_data = data['photo']
+    
+    # Verify location again (in case of tampering)
+    distance = haversine_distance(lat, lng, SCIENCE_PARK_LAT, SCIENCE_PARK_LNG)
+    
+    if distance > ALLOWED_RADIUS_METERS:
+        return jsonify({
+            'error': 'Too far from Science Park',
+            'distance': round(distance, 1),
+            'allowed_radius': ALLOWED_RADIUS_METERS
+        }), 400
+    
+    # Check if already checked in today
+    today = date.today()
+    existing = CheckIn.query.filter_by(
+        user_id=current_user.id,
+        check_in_date=today
+    ).first()
+    
+    if existing:
+        return jsonify({
+            'error': 'Already checked in today',
+            'check_in_time': existing.check_in_time.isoformat()
+        }), 400
+    
+    # Create check-in with photo
     checkin = CheckIn(
         user_id=current_user.id,
         check_in_date=today,
         check_in_time=datetime.utcnow(),
         latitude=lat,
-        longitude=lng
+        longitude=lng,
+        photo_data=photo_data
     )
     db.session.add(checkin)
     db.session.commit()
@@ -228,7 +280,8 @@ def get_leaderboard():
             'rank': i + 1,
             'name': checkin.user.name,
             'picture': checkin.user.picture,
-            'check_in_time': checkin.check_in_time.isoformat()
+            'check_in_time': checkin.check_in_time.isoformat(),
+            'photo': checkin.photo_data
         })
     
     return jsonify({
