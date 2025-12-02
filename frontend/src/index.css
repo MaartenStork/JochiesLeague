@@ -1282,6 +1282,7 @@ body::before {
   z-index: 8000;
   pointer-events: none;
   --bounce-duration: 0.5s;
+  --bounce-height: 15px;
   animation: sf-pop-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
              sf-bounce var(--bounce-duration) ease-in-out 0.4s infinite alternate,
              sf-fade-out 0.5s ease-in 3.5s forwards;
@@ -1300,19 +1301,40 @@ body::before {
   transform-origin: bottom center;
 }
 
-/* Position each character */
-.sf-pim { left: 5%; }
-.sf-charlie { left: 25%; }
-.sf-boss { left: 50%; margin-left: -60px; }
-.sf-alan { right: 25%; }
-.sf-glep { right: 5%; }
+/* Position each character with unique bounce personality */
+.sf-pim { 
+  left: 5%; 
+  --bounce-height: 18px;
+  --bounce-duration: 0.5s;
+}
+.sf-charlie { 
+  left: 25%; 
+  --bounce-height: 12px;
+  --bounce-duration: 0.55s;
+}
+.sf-boss { 
+  left: 50%; 
+  margin-left: -60px;
+  --bounce-height: 8px;
+  --bounce-duration: 0.6s;
+}
+.sf-alan { 
+  right: 25%; 
+  --bounce-height: 14px;
+  --bounce-duration: 0.48s;
+}
+.sf-glep { 
+  right: 5%; 
+  --bounce-height: 22px;
+  --bounce-duration: 0.42s;
+}
 
-/* Staggered timing - only applied via .staggered class for group spawn */
+/* Staggered pop-up timing - only for group spawn */
 .sf-pim.staggered { animation-delay: 0s, 0.4s, 4.5s; }
-.sf-charlie.staggered { animation-delay: 0.08s, 0.48s, 4.58s; --bounce-duration: 0.55s; }
-.sf-boss.staggered { animation-delay: 0.16s, 0.56s, 4.66s; --bounce-duration: 0.45s; }
-.sf-alan.staggered { animation-delay: 0.12s, 0.52s, 4.62s; --bounce-duration: 0.52s; }
-.sf-glep.staggered { animation-delay: 0.2s, 0.6s, 4.7s; --bounce-duration: 0.48s; }
+.sf-charlie.staggered { animation-delay: 0.06s, 0.46s, 4.56s; }
+.sf-boss.staggered { animation-delay: 0.12s, 0.52s, 4.62s; }
+.sf-alan.staggered { animation-delay: 0.09s, 0.49s, 4.59s; }
+.sf-glep.staggered { animation-delay: 0.15s, 0.55s, 4.65s; }
 
 @keyframes sf-pop-up {
   0% {
@@ -1333,7 +1355,7 @@ body::before {
     transform: translateY(0);
   }
   100% {
-    transform: translateY(-15px);
+    transform: translateY(calc(var(--bounce-height, 15px) * -1));
   }
 }
 
