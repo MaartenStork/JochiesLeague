@@ -73,6 +73,13 @@ function App() {
   const [sfStaggered, setSfStaggered] = useState(false); // Stagger only for group spawn
   const [sfGroupActive, setSfGroupActive] = useState(false); // Block individual triggers during group
 
+  // Ranking game easter egg
+  const [showRanking, setShowRanking] = useState(false);
+  const [rankingAnswers, setRankingAnswers] = useState({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
+  const [rankingComplete, setRankingComplete] = useState(false);
+  const correctRanking = {1: 'Ian', 2: 'Tobias', 3: 'Derk', 4: 'Guru', 5: 'Job', 6: 'Niels'};
+  const rankingNames = ['Derk', 'Maarten', 'Tobias', 'Maas', 'Job', 'Daan', 'Guru', 'Niels', 'Simo', 'Julian', 'Manka', 'Tibi', 'Ian'];
+
   // Check for auth token in URL on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -372,6 +379,11 @@ function App() {
         setShowGlep(true);
         setTimeout(() => setShowGlep(false), 4000);
         break;
+      case 'ranking':
+        setShowRanking(true);
+        setRankingAnswers({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
+        setRankingComplete(false);
+        break;
       case 'smiling friends':
       case 'smilingfriends':
       case 'smiling friend':
@@ -565,6 +577,34 @@ function App() {
     setChess(newGame);
     setBoardState(newGame.board());
     setSelectedSquare(null);
+  };
+
+  // Ranking game functions
+  const handleRankingDrop = (position, name) => {
+    const newAnswers = { ...rankingAnswers };
+    // Remove name from any other position
+    Object.keys(newAnswers).forEach(key => {
+      if (newAnswers[key] === name) newAnswers[key] = null;
+    });
+    newAnswers[position] = name;
+    setRankingAnswers(newAnswers);
+  };
+
+  const checkRankingAnswers = () => {
+    const isCorrect = Object.keys(correctRanking).every(
+      key => rankingAnswers[key] === correctRanking[key]
+    );
+    if (isCorrect) {
+      setRankingComplete(true);
+      confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
+    } else {
+      alert('Helaas, niet helemaal goed! Probeer opnieuw.');
+    }
+  };
+
+  const getAvailableNames = () => {
+    const usedNames = Object.values(rankingAnswers).filter(n => n !== null);
+    return rankingNames.filter(n => !usedNames.includes(n));
   };
 
   const handleLogin = () => {
@@ -1004,6 +1044,61 @@ function App() {
             alt="Ian Morph"
             className="ian-flashbang-img"
           />
+        </div>
+      )}
+
+      {/* Ranking Game Modal */}
+      {showRanking && (
+        <div className="chess-overlay" onClick={() => setShowRanking(false)}>
+          <div className="ranking-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ranking-header">
+              <h2>🏆 Ranking</h2>
+              <button className="chess-close" onClick={() => setShowRanking(false)}>✕</button>
+            </div>
+            <p className="ranking-question">Wie was wie, volgens Simo en Tibi?</p>
+            
+            <div className="ranking-image-container">
+              <img src="/ranking.jpeg" alt="Ranking" className="ranking-image" />
+              <div className="ranking-dropzones">
+                {[1, 2, 3, 4, 5, 6].map(pos => (
+                  <div 
+                    key={pos}
+                    className={`ranking-dropzone pos-${pos} ${rankingAnswers[pos] ? 'filled' : ''} ${rankingComplete && rankingAnswers[pos] === correctRanking[pos] ? 'correct' : ''}`}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const name = e.dataTransfer.getData('text/plain');
+                      handleRankingDrop(pos, name);
+                    }}
+                    onClick={() => rankingAnswers[pos] && handleRankingDrop(pos, null)}
+                  >
+                    {rankingAnswers[pos] || pos}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ranking-names">
+              {getAvailableNames().map(name => (
+                <div
+                  key={name}
+                  className="ranking-name"
+                  draggable
+                  onDragStart={(e) => e.dataTransfer.setData('text/plain', name)}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+
+            {!rankingComplete ? (
+              <button className="ranking-check-btn" onClick={checkRankingAnswers}>
+                Check Antwoorden
+              </button>
+            ) : (
+              <div className="ranking-success">🎉 Correct! Goed gedaan!</div>
+            )}
+          </div>
         </div>
       )}
 
