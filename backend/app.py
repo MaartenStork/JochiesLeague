@@ -1,6 +1,7 @@
 import os
 import math
-from datetime import datetime, date
+import secrets
+from datetime import datetime, date, timedelta
 from functools import wraps
 
 from flask import Flask, redirect, url_for, session, request, jsonify
@@ -55,6 +56,10 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.get(user_id)
 
+# Simple token store (in production, use Redis or database)
+# Maps token -> {user_id, expires}
+auth_tokens = {}
+
 # OAuth setup
 oauth = OAuth(app)
 google = oauth.register(
@@ -80,12 +85,26 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     
     return R * c
 
+def get_user_from_token():
+    """Get user from Bearer token in Authorization header."""
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[7:]
+        token_data = auth_tokens.get(token)
+        if token_data and token_data['expires'] > datetime.utcnow():
+            return User.query.get(token_data['user_id'])
+    return None
+
 def api_login_required(f):
     """Decorator for API endpoints that require login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
+        # Try session auth first, then token auth
+        user = current_user if current_user.is_authenticated else get_user_from_token()
+        if not user:
             return jsonify({'error': 'Not authenticated'}), 401
+        # Store user for the request
+        request.api_user = user
         return f(*args, **kwargs)
     return decorated_function
 
@@ -124,7 +143,21 @@ def auth_callback():
         db.session.commit()
     
     login_user(user)
-    return redirect(frontend_url)
+    
+    # Generate auth token for mobile/cross-origin support
+    auth_token = secrets.token_urlsafe(32)
+    auth_tokens[auth_token] = {
+        'user_id': user.id,
+        'expires': datetime.utcnow() + timedelta(days=30)
+    }
+    
+    # Clean up expired tokens
+    now = datetime.utcnow()
+    expired = [t for t, data in auth_tokens.items() if data['expires'] < now]
+    for t in expired:
+        del auth_tokens[t]
+    
+    return redirect(f"{frontend_url}?auth_token={auth_token}")
 
 @app.route('/auth/logout')
 def logout():
@@ -135,14 +168,16 @@ def logout():
 @app.route('/auth/user')
 def get_current_user():
     """Get current logged-in user info."""
-    if current_user.is_authenticated:
+    # Try session auth first, then token auth
+    user = current_user if current_user.is_authenticated else get_user_from_token()
+    if user:
         return jsonify({
             'authenticated': True,
             'user': {
-                'id': current_user.id,
-                'name': current_user.name,
-                'email': current_user.email,
-                'picture': current_user.picture
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'picture': user.picture
             }
         })
     return jsonify({'authenticated': False})
@@ -153,6 +188,7 @@ def get_current_user():
 @api_login_required
 def verify_location():
     """Verify user is at Science Park (step 1 of check-in)."""
+    user = request.api_user
     data = request.get_json()
     
     if not data or 'latitude' not in data or 'longitude' not in data:
@@ -174,7 +210,7 @@ def verify_location():
     # Check if already checked in today
     today = date.today()
     existing = CheckIn.query.filter_by(
-        user_id=current_user.id,
+        user_id=user.id,
         check_in_date=today
     ).first()
     
@@ -197,6 +233,7 @@ def verify_location():
 @api_login_required
 def checkin():
     """Complete check-in with photo (step 2)."""
+    user = request.api_user
     data = request.get_json()
     
     if not data or 'latitude' not in data or 'longitude' not in data:
@@ -222,7 +259,7 @@ def checkin():
     # Check if already checked in today
     today = date.today()
     existing = CheckIn.query.filter_by(
-        user_id=current_user.id,
+        user_id=user.id,
         check_in_date=today
     ).first()
     
@@ -234,7 +271,7 @@ def checkin():
     
     # Create check-in with photo
     checkin = CheckIn(
-        user_id=current_user.id,
+        user_id=user.id,
         check_in_date=today,
         check_in_time=datetime.utcnow(),
         latitude=lat,
@@ -255,9 +292,10 @@ def checkin():
 @api_login_required
 def get_status():
     """Get current user's check-in status for today."""
+    user = request.api_user
     today = date.today()
     checkin = CheckIn.query.filter_by(
-        user_id=current_user.id,
+        user_id=user.id,
         check_in_date=today
     ).first()
     
