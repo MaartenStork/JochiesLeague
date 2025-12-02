@@ -35,9 +35,8 @@ function App() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Flying Job state
-  const [showFlyingJob, setShowFlyingJob] = useState(false);
-  const [jobPosition, setJobPosition] = useState({ fromLeft: true });
+  // Flying Jobs state (array to support multiple Jobs at once)
+  const [flyingJobs, setFlyingJobs] = useState([]);
 
   // Draggable B easter egg
   const [bPlaced, setBPlaced] = useState(false);
@@ -159,6 +158,27 @@ function App() {
     };
   }, [stream]);
 
+  // Helper function to spawn a flying Job
+  const spawnFlyingJob = useCallback(() => {
+    const id = Date.now() + Math.random(); // Unique ID for each Job
+    const fromLeft = Math.random() > 0.5;
+    const startY = 10 + Math.random() * 70;
+    const endY = 10 + Math.random() * 70;
+    const trajectories = ['straight', 'wavy', 'loop', 'bounce', 'spiral'];
+    const trajectory = trajectories[Math.floor(Math.random() * trajectories.length)];
+    const duration = 2 + Math.random() * 2;
+    
+    const newJob = { id, fromLeft, startY, endY, trajectory, duration };
+    setFlyingJobs(prev => [...prev, newJob]);
+    
+    // Remove this specific Job after animation completes (with 500ms buffer)
+    setTimeout(() => {
+      setFlyingJobs(prev => prev.filter(job => job.id !== id));
+    }, (duration * 1000) + 500);
+    
+    return newJob;
+  }, []);
+
   // Flying Job easter egg - appears randomly every 1-3 minutes
   useEffect(() => {
     const scheduleNextJob = () => {
@@ -166,22 +186,7 @@ function App() {
       const nextInterval = 60000 + Math.random() * 120000;
       
       return setTimeout(() => {
-        // Random direction
-        const fromLeft = Math.random() > 0.5;
-        // Random start and end heights (10% to 80% of screen)
-        const startY = 10 + Math.random() * 70;
-        const endY = 10 + Math.random() * 70;
-        // Random trajectory type
-        const trajectories = ['straight', 'wavy', 'loop', 'bounce', 'spiral'];
-        const trajectory = trajectories[Math.floor(Math.random() * trajectories.length)];
-        // Random speed (2-4 seconds)
-        const duration = 2 + Math.random() * 2;
-        
-        setJobPosition({ fromLeft, startY, endY, trajectory, duration });
-        setShowFlyingJob(true);
-        // Hide after animation completes
-        setTimeout(() => setShowFlyingJob(false), duration * 1000);
-        
+        spawnFlyingJob();
         // Schedule next appearance
         timeoutRef.current = scheduleNextJob();
       }, nextInterval);
@@ -190,9 +195,9 @@ function App() {
     const timeoutRef = { current: scheduleNextJob() };
 
     return () => clearTimeout(timeoutRef.current);
-  }, []);
+  }, [spawnFlyingJob]);
 
-  const handleJobClick = (e) => {
+  const handleJobClick = (e, jobId) => {
     e.stopPropagation();
     // Confetti from both bottom corners!
     confetti({
@@ -209,7 +214,8 @@ function App() {
       angle: 120,
       colors: ['#00ff88', '#ffd700', '#ff4466', '#00ddaa']
     });
-    setShowFlyingJob(false);
+    // Remove the clicked Job
+    setFlyingJobs(prev => prev.filter(job => job.id !== jobId));
   };
 
   // Draggable B handlers
@@ -308,15 +314,7 @@ function App() {
       case 'labubu job':
       case 'joblabubu':
       case 'labubujob':
-        setShowFlyingJob(true);
-        setJobPosition({ 
-          fromLeft: Math.random() > 0.5, 
-          startY: 10 + Math.random() * 70,
-          endY: 10 + Math.random() * 70,
-          trajectory: ['straight', 'wavy', 'loop', 'bounce', 'spiral'][Math.floor(Math.random() * 5)],
-          duration: 3
-        });
-        setTimeout(() => setShowFlyingJob(false), 3000);
+        spawnFlyingJob();
         break;
       case 'chess':
       case 'schaken':
@@ -383,6 +381,7 @@ function App() {
         setShowRanking(true);
         setRankingAnswers({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
         setRankingComplete(false);
+        setRankingChecked(false);
         break;
       case 'smiling friends':
       case 'smilingfriends':
@@ -590,16 +589,21 @@ function App() {
     setRankingAnswers(newAnswers);
   };
 
+  const [rankingChecked, setRankingChecked] = useState(false);
+  
   const checkRankingAnswers = () => {
+    setRankingChecked(true);
     const isCorrect = Object.keys(correctRanking).every(
       key => rankingAnswers[key] === correctRanking[key]
     );
     if (isCorrect) {
       setRankingComplete(true);
       confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
-    } else {
-      alert('Helaas, niet helemaal goed! Probeer opnieuw.');
     }
+  };
+  
+  const isAnswerCorrect = (pos) => {
+    return rankingAnswers[pos] === correctRanking[pos];
   };
 
   const getAvailableNames = () => {
@@ -960,17 +964,18 @@ function App() {
         </div>
       )}
 
-      {/* Flying Job Easter Egg */}
-      {showFlyingJob && (
+      {/* Flying Job Easter Eggs - multiple can exist at once */}
+      {flyingJobs.map(job => (
         <div 
-          className={`flying-job-wrapper ${jobPosition.fromLeft ? 'from-left' : 'from-right'} trajectory-${jobPosition.trajectory}`}
+          key={job.id}
+          className={`flying-job-wrapper ${job.fromLeft ? 'from-left' : 'from-right'} trajectory-${job.trajectory}`}
           style={{
-            '--start-y': `${jobPosition.startY}%`,
-            '--end-y': `${jobPosition.endY}%`,
-            '--duration': `${jobPosition.duration}s`
+            '--start-y': `${job.startY}%`,
+            '--end-y': `${job.endY}%`,
+            '--duration': `${job.duration}s`
           }}
-          onClick={handleJobClick}
-          onTouchStart={handleJobClick}
+          onClick={(e) => handleJobClick(e, job.id)}
+          onTouchStart={(e) => handleJobClick(e, job.id)}
         >
           <img
             src="/JobLabubu.png"
@@ -978,7 +983,7 @@ function App() {
             className="flying-job-img"
           />
         </div>
-      )}
+      ))}
 
       {/* Smiling Friends Pop-ups */}
       {showPim && (
@@ -1063,16 +1068,22 @@ function App() {
                 {[1, 2, 3, 4, 5, 6].map(pos => (
                   <div 
                     key={pos}
-                    className={`ranking-dropzone pos-${pos} ${rankingAnswers[pos] ? 'filled' : ''} ${rankingComplete && rankingAnswers[pos] === correctRanking[pos] ? 'correct' : ''}`}
+                    className={`ranking-dropzone pos-${pos} ${rankingAnswers[pos] ? 'filled' : ''} ${rankingChecked ? (isAnswerCorrect(pos) ? 'correct' : 'wrong') : ''}`}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
                       const name = e.dataTransfer.getData('text/plain');
                       handleRankingDrop(pos, name);
+                      setRankingChecked(false); // Reset check when dropping new name
                     }}
-                    onClick={() => rankingAnswers[pos] && handleRankingDrop(pos, null)}
+                    onClick={() => {
+                      if (rankingAnswers[pos]) {
+                        handleRankingDrop(pos, null);
+                        setRankingChecked(false);
+                      }
+                    }}
                   >
-                    {rankingAnswers[pos] || pos}
+                    {rankingAnswers[pos] || ''}
                   </div>
                 ))}
               </div>
