@@ -316,12 +316,12 @@ function App() {
         setShowIanFlashbang(true);
         setIanFadingOut(false);
         setCheatMessage('💥 FLASHBANG!');
-        // GIF is 2s, wait extra 1s on final frame, then fade out over 1s
-        setTimeout(() => setIanFadingOut(true), 3000);
+        // GIF is 2s, wait extra 2s on final frame, then fade out over 1s
+        setTimeout(() => setIanFadingOut(true), 4000);
         setTimeout(() => {
           setShowIanFlashbang(false);
           setIanFadingOut(false);
-        }, 4000);
+        }, 5000);
         break;
       case 'reset':
         document.body.style.setProperty('--accent', '#00ff88');

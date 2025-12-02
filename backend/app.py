@@ -119,45 +119,51 @@ def login():
 @app.route('/auth/callback')
 def auth_callback():
     """Handle Google OAuth callback."""
-    token = google.authorize_access_token()
-    user_info = token.get('userinfo')
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        
+        if not user_info:
+            return redirect(f"{frontend_url}?error=auth_failed")
+        
+        # Find or create user
+        user = User.query.get(user_info['sub'])
+        if not user:
+            user = User(
+                id=user_info['sub'],
+                email=user_info['email'],
+                name=user_info['name'],
+                picture=user_info.get('picture')
+            )
+            db.session.add(user)
+            db.session.commit()
+        else:
+            # Update user info
+            user.name = user_info['name']
+            user.picture = user_info.get('picture')
+            db.session.commit()
+        
+        login_user(user)
+        
+        # Generate auth token for mobile/cross-origin support
+        auth_token = secrets.token_urlsafe(32)
+        auth_tokens[auth_token] = {
+            'user_id': user.id,
+            'expires': datetime.utcnow() + timedelta(days=30)
+        }
+        
+        # Clean up expired tokens
+        now = datetime.utcnow()
+        expired = [t for t, data in auth_tokens.items() if data['expires'] < now]
+        for t in expired:
+            del auth_tokens[t]
+        
+        return redirect(f"{frontend_url}?auth_token={auth_token}")
     
-    if not user_info:
-        return redirect(f"{frontend_url}?error=auth_failed")
-    
-    # Find or create user
-    user = User.query.get(user_info['sub'])
-    if not user:
-        user = User(
-            id=user_info['sub'],
-            email=user_info['email'],
-            name=user_info['name'],
-            picture=user_info.get('picture')
-        )
-        db.session.add(user)
-        db.session.commit()
-    else:
-        # Update user info
-        user.name = user_info['name']
-        user.picture = user_info.get('picture')
-        db.session.commit()
-    
-    login_user(user)
-    
-    # Generate auth token for mobile/cross-origin support
-    auth_token = secrets.token_urlsafe(32)
-    auth_tokens[auth_token] = {
-        'user_id': user.id,
-        'expires': datetime.utcnow() + timedelta(days=30)
-    }
-    
-    # Clean up expired tokens
-    now = datetime.utcnow()
-    expired = [t for t, data in auth_tokens.items() if data['expires'] < now]
-    for t in expired:
-        del auth_tokens[t]
-    
-    return redirect(f"{frontend_url}?auth_token={auth_token}")
+    except Exception as e:
+        # Log the error and redirect to frontend with error
+        print(f"Auth callback error: {e}")
+        return redirect(f"{frontend_url}?error=auth_error")
 
 @app.route('/auth/logout')
 def logout():
