@@ -1278,7 +1278,7 @@ body::before {
 .sf-popup {
   position: fixed;
   bottom: 0;
-  width: 120px;
+  height: 180px;
   z-index: 8000;
   pointer-events: none;
   --bounce-duration: 0.5s;
@@ -1288,9 +1288,16 @@ body::before {
 }
 
 .sf-popup img {
-  width: 100%;
-  height: auto;
+  height: 100%;
+  width: auto;
   filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Scale adjustments for characters with more empty space */
+.sf-charlie img,
+.sf-boss img {
+  transform: scale(1.5);
+  transform-origin: bottom center;
 }
 
 /* Position each character with slightly different bounce timing */
@@ -1357,12 +1364,12 @@ body::before {
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .sf-popup {
-    width: 80px;
+    height: 120px;
   }
   
   .sf-pim { left: 2%; }
-  .sf-charlie { left: 22%; }
-  .sf-boss { left: 50%; margin-left: -40px; }
-  .sf-alan { right: 22%; }
+  .sf-charlie { left: 18%; }
+  .sf-boss { left: 42%; margin-left: 0; }
+  .sf-alan { right: 18%; }
   .sf-glep { right: 2%; }
 }
