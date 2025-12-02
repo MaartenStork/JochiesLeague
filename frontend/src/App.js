@@ -120,14 +120,21 @@ function App() {
   // Flying Job easter egg - appears every 5 seconds (change this later!)
   useEffect(() => {
     const interval = setInterval(() => {
-      // Random direction and height
+      // Random direction
       const fromLeft = Math.random() > 0.5;
-      const heights = ['top', 'middle', 'bottom'];
-      const height = heights[Math.floor(Math.random() * heights.length)];
-      setJobPosition({ fromLeft, height });
+      // Random start and end heights (10% to 80% of screen)
+      const startY = 10 + Math.random() * 70;
+      const endY = 10 + Math.random() * 70;
+      // Random trajectory type
+      const trajectories = ['straight', 'wavy', 'loop', 'bounce', 'spiral'];
+      const trajectory = trajectories[Math.floor(Math.random() * trajectories.length)];
+      // Random speed (2-4 seconds)
+      const duration = 2 + Math.random() * 2;
+      
+      setJobPosition({ fromLeft, startY, endY, trajectory, duration });
       setShowFlyingJob(true);
-      // Hide after animation completes (3 seconds)
-      setTimeout(() => setShowFlyingJob(false), 3000);
+      // Hide after animation completes
+      setTimeout(() => setShowFlyingJob(false), duration * 1000);
     }, 5000); // Every 5 seconds - change this to make it rarer!
 
     return () => clearInterval(interval);
@@ -492,7 +499,12 @@ function App() {
       {/* Flying Job Easter Egg */}
       {showFlyingJob && (
         <div 
-          className={`flying-job-wrapper ${jobPosition.fromLeft ? 'from-left' : 'from-right'} height-${jobPosition.height}`}
+          className={`flying-job-wrapper ${jobPosition.fromLeft ? 'from-left' : 'from-right'} trajectory-${jobPosition.trajectory}`}
+          style={{
+            '--start-y': `${jobPosition.startY}%`,
+            '--end-y': `${jobPosition.endY}%`,
+            '--duration': `${jobPosition.duration}s`
+          }}
           onClick={handleJobClick}
           onTouchStart={handleJobClick}
         >
