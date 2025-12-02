@@ -1558,6 +1558,45 @@ body::before {
   }
 }
 
+/* ============ RABBIT CLOCK (LATE CHECK-IN) ============ */
+.rabbitclock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rabbitclock-in 0.2s ease-out forwards;
+}
+
+@keyframes rabbitclock-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rabbitclock-img {
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+  animation: rabbitclock-shake 0.1s ease-in-out 3;
+}
+
+@keyframes rabbitclock-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
 /* ============ BRAINROT EASTER EGG ============ */
 .brainrot-overlay {
   position: fixed;

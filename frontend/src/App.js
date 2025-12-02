@@ -76,6 +76,9 @@ function App() {
   const [showBrainrot, setShowBrainrot] = useState(false);
   const [brainrotLoaded, setBrainrotLoaded] = useState({ left: false, right: false });
 
+  // Rabbit clock (late check-in after 12:00)
+  const [showRabbitClock, setShowRabbitClock] = useState(false);
+
   // Ranking game easter egg
   const [showRanking, setShowRanking] = useState(false);
   const [rankingAnswers, setRankingAnswers] = useState({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
@@ -388,6 +391,7 @@ function App() {
         setRankingChecked(false);
         break;
       case 'brainrot':
+      case 'brain rot':
         setBrainrotLoaded({ left: false, right: false });
         setShowBrainrot(true);
         break;
@@ -756,6 +760,13 @@ function App() {
         });
         stopCamera();
         fetchLeaderboard();
+        
+        // Check if check-in is after 12:00 - show rabbit clock!
+        const checkInDate = new Date(data.check_in_time);
+        if (checkInDate.getHours() >= 12) {
+          setShowRabbitClock(true);
+          setTimeout(() => setShowRabbitClock(false), 1500);
+        }
       } else {
         setMessage({ type: 'error', text: data.error });
       }
@@ -1046,6 +1057,13 @@ function App() {
           {cheatMessage && <div className="cheat-message">{cheatMessage}</div>}
         </div>
       </div>
+
+      {/* Rabbit Clock - Late Check-in (after 12:00) */}
+      {showRabbitClock && (
+        <div className="rabbitclock-overlay">
+          <img src="/rabbitclock.png" alt="You're late!" className="rabbitclock-img" />
+        </div>
+      )}
 
       {/* Brainrot Easter Egg */}
       {showBrainrot && (
