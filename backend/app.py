@@ -1,6 +1,6 @@
 import os
 import math
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from functools import wraps
 
 from flask import Flask, redirect, url_for, session, request, jsonify
@@ -80,66 +80,14 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     
     return R * c
 
-def get_user_from_token():
-    """Get user from Authorization header token."""
-    auth_header = request.headers.get('Authorization', '')
-    if auth_header.startswith('Bearer '):
-        token = auth_header[7:]
-        from itsdangerous import URLSafeTimedSerializer
-        s = URLSafeTimedSerializer(app.secret_key)
-        try:
-            user_id = s.loads(token, max_age=86400 * 30)  # 30 days
-            return User.query.get(user_id)
-        except:
-            return None
-    return None
-
 def api_login_required(f):
     """Decorator for API endpoints that require login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check session cookie first (desktop)
-        if current_user.is_authenticated:
-            return f(*args, **kwargs)
-        # Check token header (mobile fallback)
-        user = get_user_from_token()
-        if user:
-            # Log in the user so current_user works in route handlers
-            login_user(user)
-            return f(*args, **kwargs)
-        return jsonify({'error': 'Not authenticated'}), 401
+        if not current_user.is_authenticated:
+            return jsonify({'error': 'Not authenticated'}), 401
+        return f(*args, **kwargs)
     return decorated_function
-
-def get_current_user_helper():
-    """Get current user from session or token."""
-    if current_user.is_authenticated:
-        return current_user
-    return get_user_from_token()
-
-def format_utc_time(dt):
-    """Format datetime as ISO string with Z suffix to indicate UTC."""
-    return dt.isoformat() + 'Z' if dt else None
-
-def cleanup_old_photos():
-    """Delete photo data from check-ins older than 24 hours to save storage."""
-    cutoff_time = datetime.utcnow() - timedelta(hours=24)
-    old_checkins = CheckIn.query.filter(
-        CheckIn.check_in_time < cutoff_time,
-        CheckIn.photo_data.isnot(None)
-    ).all()
-    
-    for checkin in old_checkins:
-        checkin.photo_data = None
-    
-    if old_checkins:
-        db.session.commit()
-
-# ============ ROOT ROUTE ============
-
-@app.route('/')
-def index():
-    """Redirect to frontend."""
-    return redirect(frontend_url)
 
 # ============ AUTH ROUTES ============
 
@@ -152,42 +100,31 @@ def login():
 @app.route('/auth/callback')
 def auth_callback():
     """Handle Google OAuth callback."""
-    try:
-        token = google.authorize_access_token()
-        user_info = token.get('userinfo')
-        
-        if not user_info:
-            return redirect(f"{frontend_url}?error=auth_failed")
-        
-        # Find or create user
-        user = User.query.get(user_info['sub'])
-        if not user:
-            user = User(
-                id=user_info['sub'],
-                email=user_info['email'],
-                name=user_info['name'],
-                picture=user_info.get('picture')
-            )
-            db.session.add(user)
-            db.session.commit()
-        else:
-            # Update user info
-            user.name = user_info['name']
-            user.picture = user_info.get('picture')
-            db.session.commit()
-        
-        login_user(user)
-        
-        # Generate token for mobile (cookies don't work well cross-site)
-        from itsdangerous import URLSafeTimedSerializer
-        s = URLSafeTimedSerializer(app.secret_key)
-        auth_token = s.dumps(user.id)
-        
-        # Redirect with token - frontend will store it and clean the URL
-        return redirect(f"{frontend_url}?auth_token={auth_token}")
-    except Exception as e:
-        print(f"OAuth error: {e}")
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+    
+    if not user_info:
         return redirect(f"{frontend_url}?error=auth_failed")
+    
+    # Find or create user
+    user = User.query.get(user_info['sub'])
+    if not user:
+        user = User(
+            id=user_info['sub'],
+            email=user_info['email'],
+            name=user_info['name'],
+            picture=user_info.get('picture')
+        )
+        db.session.add(user)
+        db.session.commit()
+    else:
+        # Update user info
+        user.name = user_info['name']
+        user.picture = user_info.get('picture')
+        db.session.commit()
+    
+    login_user(user)
+    return redirect(frontend_url)
 
 @app.route('/auth/logout')
 def logout():
@@ -198,15 +135,14 @@ def logout():
 @app.route('/auth/user')
 def get_current_user():
     """Get current logged-in user info."""
-    user = get_current_user_helper()
-    if user:
+    if current_user.is_authenticated:
         return jsonify({
             'authenticated': True,
             'user': {
-                'id': user.id,
-                'name': user.name,
-                'email': user.email,
-                'picture': user.picture
+                'id': current_user.id,
+                'name': current_user.name,
+                'email': current_user.email,
+                'picture': current_user.picture
             }
         })
     return jsonify({'authenticated': False})
@@ -245,7 +181,7 @@ def verify_location():
     if existing:
         return jsonify({
             'error': 'Already checked in today',
-            'check_in_time': existing.check_in_time.isoformat() + 'Z'
+            'check_in_time': existing.check_in_time.isoformat()
         }), 400
     
     return jsonify({
@@ -293,7 +229,7 @@ def checkin():
     if existing:
         return jsonify({
             'error': 'Already checked in today',
-            'check_in_time': existing.check_in_time.isoformat() + 'Z'
+            'check_in_time': existing.check_in_time.isoformat()
         }), 400
     
     # Create check-in with photo
@@ -311,7 +247,7 @@ def checkin():
     return jsonify({
         'success': True,
         'message': 'Checked in successfully!',
-        'check_in_time': checkin.check_in_time.isoformat() + 'Z',
+        'check_in_time': checkin.check_in_time.isoformat(),
         'distance': round(distance, 1)
     })
 
@@ -328,7 +264,7 @@ def get_status():
     if checkin:
         return jsonify({
             'checked_in': True,
-            'check_in_time': checkin.check_in_time.isoformat() + 'Z'
+            'check_in_time': checkin.check_in_time.isoformat()
         })
     return jsonify({'checked_in': False})
 
@@ -337,9 +273,6 @@ def get_status():
 @app.route('/api/leaderboard')
 def get_leaderboard():
     """Get today's leaderboard."""
-    # Clean up photos older than 24 hours
-    cleanup_old_photos()
-    
     today = date.today()
     checkins = CheckIn.query.filter_by(check_in_date=today)\
         .order_by(CheckIn.check_in_time.asc())\
@@ -351,7 +284,7 @@ def get_leaderboard():
             'rank': i + 1,
             'name': checkin.user.name,
             'picture': checkin.user.picture,
-            'check_in_time': checkin.check_in_time.isoformat() + 'Z',
+            'check_in_time': checkin.check_in_time.isoformat(),
             'photo': checkin.photo_data
         })
     
@@ -384,7 +317,7 @@ def get_history():
                 'rank': i + 1,
                 'name': c.user.name,
                 'picture': c.user.picture,
-                'check_in_time': c.check_in_time.isoformat() + 'Z'
+                'check_in_time': c.check_in_time.isoformat()
             } for i, c in enumerate(checkins)]
         }
         history.append(day_data)
@@ -402,15 +335,6 @@ def health():
 
 with app.app_context():
     db.create_all()
-    
-    # Add photo_data column if it doesn't exist (migration for existing DBs)
-    from sqlalchemy import inspect, text
-    inspector = inspect(db.engine)
-    columns = [col['name'] for col in inspector.get_columns('checkins')]
-    if 'photo_data' not in columns:
-        with db.engine.connect() as conn:
-            conn.execute(text('ALTER TABLE checkins ADD COLUMN photo_data TEXT'))
-            conn.commit()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

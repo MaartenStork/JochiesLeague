@@ -44,6 +44,11 @@ function App() {
   const bRef = useRef(null);
   const dropZoneRef = useRef(null);
 
+  // Cheat code console
+  const [cheatConsoleOpen, setCheatConsoleOpen] = useState(false);
+  const [cheatCode, setCheatCode] = useState('');
+  const [cheatMessage, setCheatMessage] = useState('');
+
   // Check for auth token in URL on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -256,6 +261,45 @@ function App() {
     bRef.current.style.color = '';
     bRef.current.style.textShadow = '';
     setIsDraggingB(false);
+  };
+
+  // Cheat code handler
+  const handleCheatSubmit = (e) => {
+    e.preventDefault();
+    const code = cheatCode.toLowerCase().trim();
+    
+    // Add your cheat codes here!
+    switch(code) {
+      case 'party':
+        confetti({ particleCount: 300, spread: 180, origin: { y: 0.6 } });
+        setCheatMessage('🎉 PARTY MODE!');
+        break;
+      case 'job':
+        setShowFlyingJob(true);
+        setJobPosition({ 
+          fromLeft: Math.random() > 0.5, 
+          startY: 10 + Math.random() * 70,
+          endY: 10 + Math.random() * 70,
+          trajectory: ['straight', 'wavy', 'loop', 'bounce', 'spiral'][Math.floor(Math.random() * 5)],
+          duration: 3
+        });
+        setTimeout(() => setShowFlyingJob(false), 3000);
+        setCheatMessage('👋 JOB SAYS HI!');
+        break;
+      case 'gold':
+        document.body.style.setProperty('--accent', '#ffd700');
+        setCheatMessage('✨ GOLD MODE!');
+        break;
+      case 'reset':
+        document.body.style.setProperty('--accent', '#00ff88');
+        setCheatMessage('🔄 RESET!');
+        break;
+      default:
+        setCheatMessage('❌ Unknown code...');
+    }
+    
+    setCheatCode('');
+    setTimeout(() => setCheatMessage(''), 2000);
   };
 
   const handleLogin = () => {
@@ -573,20 +617,7 @@ function App() {
       {/* Instagram-style Feed */}
       {leaderboard.length > 0 && (
         <div className="feed-section">
-          <h2 className="feed-title">
-            📷 Today's {bPlaced ? 'atch' : (
-              <><span
-                ref={bRef}
-                className={`draggable-b ${isDraggingB ? 'dragging' : ''}`}
-                draggable={!bPlaced}
-                onDragStart={handleBDragStart}
-                onDragEnd={handleBDragEnd}
-                onTouchStart={handleBTouchStart}
-                onTouchMove={handleBTouchMove}
-                onTouchEnd={handleBTouchEnd}
-              >B</span>atch</>
-            )}
-          </h2>
+          <h2 className="feed-title">📷 Today's {bPlaced ? 'atch' : <><span ref={bRef} className={`draggable-b ${isDraggingB ? 'dragging' : ''}`} draggable={!bPlaced} onDragStart={handleBDragStart} onDragEnd={handleBDragEnd} onTouchStart={handleBTouchStart} onTouchMove={handleBTouchMove} onTouchEnd={handleBTouchEnd}>B</span>atch</>}</h2>
           
           <div className="feed">
             {leaderboard.map((entry) => (
@@ -637,6 +668,30 @@ function App() {
           />
         </div>
       )}
+
+      {/* Cheat Code Console */}
+      <div className={`cheat-console ${cheatConsoleOpen ? 'open' : ''}`}>
+        <div 
+          className="cheat-tab"
+          onClick={() => setCheatConsoleOpen(!cheatConsoleOpen)}
+        >
+          <span className="cheat-tab-icon">{cheatConsoleOpen ? '▶' : '◀'}</span>
+        </div>
+        <div className="cheat-panel">
+          <form onSubmit={handleCheatSubmit}>
+            <input
+              type="text"
+              value={cheatCode}
+              onChange={(e) => setCheatCode(e.target.value)}
+              placeholder="Enter code..."
+              className="cheat-input"
+              autoComplete="off"
+              spellCheck="false"
+            />
+          </form>
+          {cheatMessage && <div className="cheat-message">{cheatMessage}</div>}
+        </div>
+      </div>
     </div>
   );
 }

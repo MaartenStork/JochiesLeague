@@ -818,39 +818,114 @@ body::before {
 }
 
 .b-drop-zone {
-  display: inline-block;
-  min-width: 4px;
-  min-height: 1em;
+  display: inline;
   transition: all 0.3s;
-  vertical-align: baseline;
-  position: relative;
 }
 
 .b-drop-zone.active {
-  min-width: 1.2em;
-  padding: 0 4px;
-  background: rgba(0, 255, 136, 0.4);
-  border-radius: 6px;
-  margin: 0 2px;
-  animation: pulseGlow 0.5s ease-in-out infinite;
-}
-
-.b-drop-zone.active::after {
-  content: 'b';
-  opacity: 0.4;
+  padding: 0 0.4em;
 }
 
 .b-drop-zone.has-b {
   color: var(--gold);
-  animation: none;
   text-shadow: 0 0 15px var(--gold);
-}
-
-.b-drop-zone.has-b::after {
-  content: none;
 }
 
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
   50% { box-shadow: 0 0 25px var(--accent-glow), 0 0 40px var(--accent-glow); }
+}
+
+/* ============ CHEAT CODE CONSOLE ============ */
+.cheat-console {
+  position: fixed;
+  bottom: 20px;
+  right: -260px;
+  display: flex;
+  align-items: center;
+  z-index: 9000;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cheat-console.open {
+  right: 0;
+}
+
+.cheat-tab {
+  width: 24px;
+  height: 50px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cheat-tab:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+}
+
+.cheat-tab-icon {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  transition: color 0.2s;
+}
+
+.cheat-tab:hover .cheat-tab-icon {
+  color: var(--accent);
+}
+
+.cheat-panel {
+  width: 260px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px 0 0 12px;
+  padding: 12px;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.cheat-input {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.cheat-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.cheat-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.cheat-message {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
