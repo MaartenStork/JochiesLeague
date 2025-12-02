@@ -1696,21 +1696,15 @@ body::before {
 .fnaf-overlay {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   bottom: 0;
   z-index: 100001;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
   cursor: pointer;
-  pointer-events: auto;
 }
 
 .fnaf-video {
   height: 100vh;
   width: auto;
-  mix-blend-mode: screen;
-  background: #000;
 }
 
 /* ============ BRAINROT EASTER EGG ============ */

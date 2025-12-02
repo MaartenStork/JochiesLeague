@@ -84,6 +84,8 @@ function App() {
 
   // FNAF jumpscare easter egg
   const [showFnaf, setShowFnaf] = useState(false);
+  const fnafVideoRef = useRef(null);
+  const fnafReversingRef = useRef(false);
 
   // Ranking game easter egg
   const [showRanking, setShowRanking] = useState(false);
@@ -1175,14 +1177,34 @@ function App() {
 
       {/* FNAF Jumpscare Easter Egg */}
       {showFnaf && (
-        <div className="fnaf-overlay" onClick={() => setShowFnaf(false)}>
+        <div className="fnaf-overlay" onClick={() => { fnafReversingRef.current = false; setShowFnaf(false); }}>
           <video
+            ref={fnafVideoRef}
             className="fnaf-video"
             autoPlay
             playsInline
-            onEnded={() => setShowFnaf(false)}
+            onEnded={() => {
+              // Start reversing
+              fnafReversingRef.current = true;
+              const video = fnafVideoRef.current;
+              if (!video) return;
+              
+              const reverse = () => {
+                if (!fnafReversingRef.current || !fnafVideoRef.current) return;
+                video.currentTime -= 0.033; // ~30fps backwards
+                if (video.currentTime <= 0.033) {
+                  // Reached start, play forward again
+                  video.currentTime = 0;
+                  fnafReversingRef.current = false;
+                  video.play();
+                } else {
+                  requestAnimationFrame(reverse);
+                }
+              };
+              requestAnimationFrame(reverse);
+            }}
           >
-            <source src="/FOX.mp4" type="video/mp4" />
+            <source src="/FOX.webm" type="video/webm" />
           </video>
         </div>
       )}
