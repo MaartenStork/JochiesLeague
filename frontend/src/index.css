@@ -1296,7 +1296,8 @@ body::before {
 
 /* Scale adjustments for characters with more empty space */
 .sf-charlie img,
-.sf-boss img {
+.sf-boss img,
+.sf-alan img {
   transform: scale(1.5);
   transform-origin: bottom center;
 }
@@ -1330,10 +1331,11 @@ body::before {
 }
 
 /* Staggered pop-up timing - only for group spawn */
-.sf-pim.staggered { animation-delay: 0s, 0.4s, 4.5s; }
-.sf-charlie.staggered { animation-delay: 0.06s, 0.46s, 4.56s; }
-.sf-boss.staggered { animation-delay: 0.12s, 0.52s, 4.62s; }
-.sf-alan.staggered { animation-delay: 0.09s, 0.49s, 4.59s; }
+/* Pop-up staggered, but bounce all starts at same time (0.55s) */
+.sf-pim.staggered { animation-delay: 0s, 0.55s, 4.5s; }
+.sf-charlie.staggered { animation-delay: 0.06s, 0.55s, 4.56s; }
+.sf-boss.staggered { animation-delay: 0.12s, 0.55s, 4.62s; }
+.sf-alan.staggered { animation-delay: 0.09s, 0.55s, 4.59s; }
 .sf-glep.staggered { animation-delay: 0.15s, 0.55s, 4.65s; }
 
 @keyframes sf-pop-up {
