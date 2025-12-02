@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import confetti from 'canvas-confetti';
+import { Chess } from 'chess.js';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -48,6 +49,12 @@ function App() {
   const [cheatConsoleOpen, setCheatConsoleOpen] = useState(false);
   const [cheatCode, setCheatCode] = useState('');
   const [cheatMessage, setCheatMessage] = useState('');
+
+  // Chess game
+  const [showChess, setShowChess] = useState(false);
+  const [chess, setChess] = useState(null);
+  const [selectedSquare, setSelectedSquare] = useState(null);
+  const [boardState, setBoardState] = useState([]);
 
   // Check for auth token in URL on first load
   useEffect(() => {
@@ -282,6 +289,10 @@ function App() {
         setTimeout(() => setShowFlyingJob(false), 3000);
         setCheatMessage('👋 JOB SAYS HI!');
         break;
+      case 'chess':
+        startChessGame();
+        setCheatMessage('♟️ CHESS TIME!');
+        break;
       case 'reset':
         document.body.style.setProperty('--accent', '#00ff88');
         setCheatMessage('🔄 RESET!');
@@ -292,6 +303,81 @@ function App() {
     
     setCheatCode('');
     setTimeout(() => setCheatMessage(''), 2000);
+  };
+
+  // Chess game functions
+  const startChessGame = () => {
+    const newGame = new Chess();
+    setChess(newGame);
+    setBoardState(newGame.board());
+    setSelectedSquare(null);
+    setShowChess(true);
+    setCheatConsoleOpen(false);
+  };
+
+  const getPieceSymbol = (piece) => {
+    if (!piece) return '';
+    const symbols = {
+      'w': { 'k': '♔', 'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘', 'p': '♙' },
+      'b': { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' }
+    };
+    return symbols[piece.color][piece.type];
+  };
+
+  const getSquareName = (row, col) => {
+    const files = 'abcdefgh';
+    return files[col] + (8 - row);
+  };
+
+  const handleSquareClick = (row, col) => {
+    if (!chess) return;
+    const squareName = getSquareName(row, col);
+    const piece = chess.get(squareName);
+
+    if (selectedSquare) {
+      // Try to make a move
+      try {
+        const move = chess.move({
+          from: selectedSquare,
+          to: squareName,
+          promotion: 'q' // Auto-promote to queen
+        });
+        
+        if (move) {
+          setBoardState(chess.board());
+          
+          // Check game status
+          if (chess.isCheckmate()) {
+            setTimeout(() => {
+              confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
+              alert(chess.turn() === 'w' ? '♚ Black wins!' : '♔ White wins!');
+            }, 100);
+          } else if (chess.isDraw()) {
+            setTimeout(() => alert("It's a draw!"), 100);
+          }
+          
+          setSelectedSquare(null);
+          return;
+        }
+      } catch (e) {
+        // Invalid move
+      }
+      setSelectedSquare(null);
+    }
+    
+    // Select a piece
+    if (piece && piece.color === chess.turn()) {
+      setSelectedSquare(squareName);
+    } else {
+      setSelectedSquare(null);
+    }
+  };
+
+  const resetChessGame = () => {
+    const newGame = new Chess();
+    setChess(newGame);
+    setBoardState(newGame.board());
+    setSelectedSquare(null);
   };
 
   const handleLogin = () => {
@@ -673,6 +759,47 @@ function App() {
           {cheatMessage && <div className="cheat-message">{cheatMessage}</div>}
         </div>
       </div>
+
+      {/* Chess Game Modal */}
+      {showChess && (
+        <div className="chess-overlay" onClick={() => setShowChess(false)}>
+          <div className="chess-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="chess-header">
+              <h2>♟️ Chess</h2>
+              <button className="chess-close" onClick={() => setShowChess(false)}>✕</button>
+            </div>
+            <div className="chess-status">
+              {chess && (chess.isCheckmate() ? 
+                (chess.turn() === 'w' ? '♚ Black wins!' : '♔ White wins!') :
+                chess.isDraw() ? "Draw!" :
+                chess.isCheck() ? `${chess.turn() === 'w' ? 'White' : 'Black'} is in check!` :
+                `${chess.turn() === 'w' ? 'White' : 'Black'}'s turn`
+              )}
+            </div>
+            <div className="chess-board">
+              {boardState.map((row, rowIndex) => (
+                <div key={rowIndex} className="chess-row">
+                  {row.map((piece, colIndex) => {
+                    const squareName = getSquareName(rowIndex, colIndex);
+                    const isLight = (rowIndex + colIndex) % 2 === 0;
+                    const isSelected = selectedSquare === squareName;
+                    return (
+                      <div
+                        key={colIndex}
+                        className={`chess-square ${isLight ? 'light' : 'dark'} ${isSelected ? 'selected' : ''}`}
+                        onClick={() => handleSquareClick(rowIndex, colIndex)}
+                      >
+                        {getPieceSymbol(piece)}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <button className="chess-reset" onClick={resetChessGame}>New Game</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
