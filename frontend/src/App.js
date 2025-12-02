@@ -74,6 +74,7 @@ function App() {
 
   // Brainrot easter egg
   const [showBrainrot, setShowBrainrot] = useState(false);
+  const [brainrotLoaded, setBrainrotLoaded] = useState({ left: false, right: false });
 
   // Ranking game easter egg
   const [showRanking, setShowRanking] = useState(false);
@@ -387,9 +388,8 @@ function App() {
         setRankingChecked(false);
         break;
       case 'brainrot':
+        setBrainrotLoaded({ left: false, right: false });
         setShowBrainrot(true);
-        // Auto-hide after 10 seconds
-        setTimeout(() => setShowBrainrot(false), 10000);
         break;
       case 'smiling friends':
       case 'smilingfriends':
@@ -1049,25 +1049,35 @@ function App() {
 
       {/* Brainrot Easter Egg */}
       {showBrainrot && (
-        <div className="brainrot-overlay" onClick={() => setShowBrainrot(false)}>
-          <video
-            className="brainrot-video brainrot-left"
-            autoPlay
-            loop
-            muted
-            playsInline
-          >
-            <source src="/brainrot/brainrot1.mp4" type="video/mp4" />
-          </video>
-          <video
-            className="brainrot-video brainrot-right"
-            autoPlay
-            loop
-            muted
-            playsInline
-          >
-            <source src="/brainrot/brainrot2.mp4" type="video/mp4" />
-          </video>
+        <div className="brainrot-overlay">
+          <div className="brainrot-container brainrot-left">
+            <button className="brainrot-close" onClick={() => setShowBrainrot(false)}>✕</button>
+            {!brainrotLoaded.left && <div className="brainrot-loader"><div className="spinner" /></div>}
+            <video
+              className={`brainrot-video ${brainrotLoaded.left ? 'loaded' : ''}`}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onCanPlay={() => setBrainrotLoaded(prev => ({ ...prev, left: true }))}
+            >
+              <source src="/brainrot/brainrot1.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div className="brainrot-container brainrot-right">
+            <button className="brainrot-close" onClick={() => setShowBrainrot(false)}>✕</button>
+            {!brainrotLoaded.right && <div className="brainrot-loader"><div className="spinner" /></div>}
+            <video
+              className={`brainrot-video ${brainrotLoaded.right ? 'loaded' : ''}`}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onCanPlay={() => setBrainrotLoaded(prev => ({ ...prev, right: true }))}
+            >
+              <source src="/brainrot/brainrot2.mp4" type="video/mp4" />
+            </video>
+          </div>
         </div>
       )}
 
