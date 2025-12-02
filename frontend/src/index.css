@@ -1098,6 +1098,7 @@ body::before {
   height: 100vh;
   z-index: 99999;
   animation: flashbang-in 0.15s ease-out forwards;
+  pointer-events: none;
 }
 
 @keyframes flashbang-in {
@@ -1138,4 +1139,5 @@ body::before {
   height: 100%;
   border: none;
   z-index: 1;
+  opacity: 0.75;
 }

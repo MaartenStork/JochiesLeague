@@ -12,10 +12,13 @@ const sideLength = 800
 let startTime = null
 const animationDuration = 2000 // 2 seconds for the morph
 let animationComplete = false
+let imagesReady = false
 
 function preload() {
-  // Load nodes data
+  // Load nodes data AND images in preload so they're ready before setup
   nodesData = loadJSON('nodes (1).json')
+  img1 = loadImage('IAN1.jpg')
+  img2 = loadImage('IAN2.jpg')
 }
 
 function setup() {
@@ -31,26 +34,26 @@ function setup() {
   drawingContext.pixelStorei(drawingContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
   drawingContext.disable(drawingContext.DEPTH_TEST)
   
-  // Load images
-  loadImage('IAN1.jpg', (loaded) => {
-    img1 = loaded
+  // Process images into textures (they're already loaded from preload)
+  if (img1) {
     texGraphic.clear()
     texGraphic.push()
     texGraphic.scale(min(texGraphic.width/img1.width, texGraphic.height/img1.height))
     texGraphic.image(img1, 0, 0)
     texGraphic.pop()
     tex1 = texGraphic.get()
-  })
+  }
   
-  loadImage('IAN2.jpg', (loaded) => {
-    img2 = loaded
+  if (img2) {
     texGraphic.clear()
     texGraphic.push()
     texGraphic.scale(min(texGraphic.width/img2.width, texGraphic.height/img2.height))
     texGraphic.image(img2, 0, 0)
     texGraphic.pop()
     tex2 = texGraphic.get()
-  })
+  }
+  
+  imagesReady = (tex1 && tex2)
   
   // Parse nodes data
   if (nodesData && nodesData.length === 2) {
@@ -80,7 +83,7 @@ function windowResized() {
 }
 
 function draw() {
-  background(0) // Black background in case any edges show
+  clear() // Transparent background so app shows through
   
   // Start timer once textures are loaded
   if (tex1 && tex2 && startTime === null) {
