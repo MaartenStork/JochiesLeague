@@ -62,7 +62,7 @@ function App() {
   // Ian flashbang easter egg
   const [showIanFlashbang, setShowIanFlashbang] = useState(false);
   const [ianFadingOut, setIanFadingOut] = useState(false);
-  const [ianGifKey, setIanGifKey] = useState(0); // Force GIF reload each time
+  const ianGifRef = useRef(null);
 
   // Smiling Friends pop-up easter eggs (can all show simultaneously)
   const [showPim, setShowPim] = useState(false);
@@ -308,7 +308,6 @@ function App() {
           duration: 3
         });
         setTimeout(() => setShowFlyingJob(false), 3000);
-        setCheatMessage('👋 JOB SAYS HI!');
         break;
       case 'chess':
       case 'schaken':
@@ -316,13 +315,18 @@ function App() {
       case 'chessgame':
       case 'chess game':
         startChessGame();
-        setCheatMessage('♟️ CHESS TIME!');
         break;
       case 'ian':
-        setIanGifKey(prev => prev + 1); // Force GIF reload
         setShowIanFlashbang(true);
         setIanFadingOut(false);
-        setCheatMessage('💥 FLASHBANG!');
+        // Reset GIF by clearing and re-setting src (restarts from frame 1)
+        setTimeout(() => {
+          if (ianGifRef.current) {
+            const src = ianGifRef.current.src;
+            ianGifRef.current.src = '';
+            ianGifRef.current.src = src;
+          }
+        }, 10);
         // GIF is 2s, wait extra 2s on final frame, then fade out over 1s
         setTimeout(() => setIanFadingOut(true), 4000);
         setTimeout(() => {
@@ -332,34 +336,28 @@ function App() {
         break;
       case 'reset':
         document.body.style.setProperty('--accent', '#00ff88');
-        setCheatMessage('🔄 RESET!');
         break;
       // Smiling Friends characters
       case 'pim':
         setShowPim(true);
-        setCheatMessage('🩷 PIM!');
         setTimeout(() => setShowPim(false), 4000);
         break;
       case 'charlie':
         setShowCharlie(true);
-        setCheatMessage('💛 CHARLIE!');
         setTimeout(() => setShowCharlie(false), 4000);
         break;
       case 'boss':
       case 'the boss':
       case 'theboss':
         setShowBoss(true);
-        setCheatMessage('👔 THE BOSS!');
         setTimeout(() => setShowBoss(false), 4000);
         break;
       case 'alan':
         setShowAlan(true);
-        setCheatMessage('🧠 ALAN!');
         setTimeout(() => setShowAlan(false), 4000);
         break;
       case 'glep':
         setShowGlep(true);
-        setCheatMessage('👽 GLEP!');
         setTimeout(() => setShowGlep(false), 4000);
         break;
       case 'smiling friends':
@@ -371,7 +369,6 @@ function App() {
         setShowBoss(true);
         setShowAlan(true);
         setShowGlep(true);
-        setCheatMessage('🎉 SMILING FRIENDS!');
         setTimeout(() => {
           setShowPim(false);
           setShowCharlie(false);
@@ -987,7 +984,7 @@ function App() {
         <div className={`ian-flashbang-overlay ${ianFadingOut ? 'fading-out' : ''}`}>
           <div className="ian-flashbang-flash" />
           <img 
-            key={ianGifKey}
+            ref={ianGifRef}
             src="/ianmorph/ian_morph.gif"
             alt="Ian Morph"
             className="ian-flashbang-img"
