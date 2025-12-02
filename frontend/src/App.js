@@ -171,16 +171,31 @@ function App() {
   // Monkey cursor punishment for wrong cheat codes
   useEffect(() => {
     if (monkeyCursor) {
-      document.body.style.cursor = 'url(/mouse/thinkingmonkey.png) 16 16, auto';
-      document.body.classList.add('monkey-cursor');
+      const cursorNormal = 'url(/mouse/thinkingmonkey.png) 16 16, auto';
+      const cursorClick = 'url(/mouse/thinkingmonkey2.png) 16 16, auto';
+      
+      // Apply cursor to html element to override everything
+      const html = document.documentElement;
+      html.style.setProperty('cursor', cursorNormal, 'important');
+      
+      const handleMouseDown = () => {
+        html.style.setProperty('cursor', cursorClick, 'important');
+      };
+      const handleMouseUp = () => {
+        html.style.setProperty('cursor', cursorNormal, 'important');
+      };
+      
+      document.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        html.style.cursor = '';
+        document.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
     } else {
-      document.body.style.cursor = '';
-      document.body.classList.remove('monkey-cursor');
+      document.documentElement.style.cursor = '';
     }
-    return () => {
-      document.body.style.cursor = '';
-      document.body.classList.remove('monkey-cursor');
-    };
   }, [monkeyCursor]);
 
   // Helper function to spawn a flying Job

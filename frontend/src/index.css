@@ -895,15 +895,7 @@ body::before {
 }
 
 /* ============ MONKEY CURSOR PUNISHMENT ============ */
-body.monkey-cursor,
-body.monkey-cursor * {
-  cursor: url('/mouse/thinkingmonkey.png') 16 16, auto !important;
-}
-
-body.monkey-cursor:active,
-body.monkey-cursor *:active {
-  cursor: url('/mouse/thinkingmonkey2.png') 16 16, auto !important;
-}
+/* Cursor is handled via JavaScript to avoid webpack url() resolution issues */
 
 /* ============ CHEAT CODE CONSOLE ============ */
 .cheat-backdrop {
