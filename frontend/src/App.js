@@ -70,6 +70,7 @@ function App() {
   const [showBoss, setShowBoss] = useState(false);
   const [showAlan, setShowAlan] = useState(false);
   const [showGlep, setShowGlep] = useState(false);
+  const [sfStaggered, setSfStaggered] = useState(false); // Stagger only for group spawn
 
   // Check for auth token in URL on first load
   useEffect(() => {
@@ -339,24 +340,29 @@ function App() {
         break;
       // Smiling Friends characters
       case 'pim':
+        setSfStaggered(false);
         setShowPim(true);
         setTimeout(() => setShowPim(false), 4000);
         break;
       case 'charlie':
+        setSfStaggered(false);
         setShowCharlie(true);
         setTimeout(() => setShowCharlie(false), 4000);
         break;
       case 'boss':
       case 'the boss':
       case 'theboss':
+        setSfStaggered(false);
         setShowBoss(true);
         setTimeout(() => setShowBoss(false), 4000);
         break;
       case 'alan':
+        setSfStaggered(false);
         setShowAlan(true);
         setTimeout(() => setShowAlan(false), 4000);
         break;
       case 'glep':
+        setSfStaggered(false);
         setShowGlep(true);
         setTimeout(() => setShowGlep(false), 4000);
         break;
@@ -364,6 +370,7 @@ function App() {
       case 'smilingfriends':
       case 'smiling friend':
       case 'smilingfriend':
+        setSfStaggered(true);
         setShowPim(true);
         setShowCharlie(true);
         setShowBoss(true);
@@ -927,27 +934,27 @@ function App() {
 
       {/* Smiling Friends Pop-ups */}
       {showPim && (
-        <div className="sf-popup sf-pim">
+        <div className={`sf-popup sf-pim ${sfStaggered ? 'staggered' : ''}`}>
           <img src="/smilingfriends/pimnobackground.png" alt="Pim" />
         </div>
       )}
       {showCharlie && (
-        <div className="sf-popup sf-charlie">
+        <div className={`sf-popup sf-charlie ${sfStaggered ? 'staggered' : ''}`}>
           <img src="/smilingfriends/charlienobackground.png" alt="Charlie" />
         </div>
       )}
       {showBoss && (
-        <div className="sf-popup sf-boss">
+        <div className={`sf-popup sf-boss ${sfStaggered ? 'staggered' : ''}`}>
           <img src="/smilingfriends/bossnobackground.png" alt="The Boss" />
         </div>
       )}
       {showAlan && (
-        <div className="sf-popup sf-alan">
+        <div className={`sf-popup sf-alan ${sfStaggered ? 'staggered' : ''}`}>
           <img src="/smilingfriends/alannobackground.png" alt="Alan" />
         </div>
       )}
       {showGlep && (
-        <div className="sf-popup sf-glep">
+        <div className={`sf-popup sf-glep ${sfStaggered ? 'staggered' : ''}`}>
           <img src="/smilingfriends/glepnobackground.png" alt="Glep" />
         </div>
       )}
