@@ -1566,8 +1566,7 @@ body::before {
   right: 0;
   bottom: 0;
   z-index: 99998;
-  display: flex;
-  cursor: pointer;
+  pointer-events: none;
   animation: brainrot-fade-in 0.3s ease-out forwards;
 }
 
@@ -1577,36 +1576,38 @@ body::before {
 }
 
 .brainrot-video {
+  position: absolute;
+  top: 0;
+  height: 100%;
   object-fit: cover;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-/* Desktop: Split screen */
+/* Desktop: Videos on the sides of centered content */
 .brainrot-left {
-  width: 50%;
-  height: 100%;
+  left: 0;
+  width: calc(50% - 270px); /* Space to the left of ~540px centered content */
 }
 
 .brainrot-right {
-  width: 50%;
-  height: 100%;
+  right: 0;
+  width: calc(50% - 270px); /* Space to the right of ~540px centered content */
 }
 
 /* Mobile: Only show brainrot2 on bottom half */
 @media (max-width: 768px) {
-  .brainrot-overlay {
-    top: auto;
-    bottom: 0;
-    height: 50%;
-    background: transparent;
-  }
-  
   .brainrot-left {
     display: none;
   }
   
   .brainrot-right {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    height: 100%;
+    height: 50%;
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
   }
