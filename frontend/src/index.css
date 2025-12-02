@@ -1273,3 +1273,90 @@ body::before {
     opacity: 0;
   }
 }
+
+/* ============ SMILING FRIENDS POP-UPS ============ */
+.sf-popup {
+  position: fixed;
+  bottom: 0;
+  width: 120px;
+  z-index: 8000;
+  pointer-events: none;
+  animation: sf-pop-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             sf-bounce 0.5s ease-in-out 0.4s infinite alternate,
+             sf-fade-out 0.5s ease-in 3.5s forwards;
+}
+
+.sf-popup img {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Position each character */
+.sf-pim { left: 5%; }
+.sf-charlie { left: 25%; }
+.sf-boss { left: 45%; transform: translateX(-50%); }
+.sf-alan { right: 25%; }
+.sf-glep { right: 5%; }
+
+@keyframes sf-pop-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sf-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Override bounce for boss (centered) */
+.sf-boss {
+  animation: sf-pop-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             sf-bounce-boss 0.5s ease-in-out 0.4s infinite alternate,
+             sf-fade-out 0.5s ease-in 3.5s forwards;
+}
+
+@keyframes sf-bounce-boss {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    transform: translateX(-50%) translateY(-15px);
+  }
+}
+
+@keyframes sf-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .sf-popup {
+    width: 80px;
+  }
+  
+  .sf-pim { left: 2%; }
+  .sf-charlie { left: 22%; }
+  .sf-boss { left: 50%; }
+  .sf-alan { right: 22%; }
+  .sf-glep { right: 2%; }
+}

@@ -64,6 +64,13 @@ function App() {
   const [ianFadingOut, setIanFadingOut] = useState(false);
   const [ianGifKey, setIanGifKey] = useState(0); // Force GIF reload each time
 
+  // Smiling Friends pop-up easter eggs (can all show simultaneously)
+  const [showPim, setShowPim] = useState(false);
+  const [showCharlie, setShowCharlie] = useState(false);
+  const [showBoss, setShowBoss] = useState(false);
+  const [showAlan, setShowAlan] = useState(false);
+  const [showGlep, setShowGlep] = useState(false);
+
   // Check for auth token in URL on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -326,6 +333,34 @@ function App() {
       case 'reset':
         document.body.style.setProperty('--accent', '#00ff88');
         setCheatMessage('🔄 RESET!');
+        break;
+      // Smiling Friends characters
+      case 'pim':
+        setShowPim(true);
+        setCheatMessage('🩷 PIM!');
+        setTimeout(() => setShowPim(false), 4000);
+        break;
+      case 'charlie':
+        setShowCharlie(true);
+        setCheatMessage('💛 CHARLIE!');
+        setTimeout(() => setShowCharlie(false), 4000);
+        break;
+      case 'boss':
+      case 'the boss':
+      case 'theboss':
+        setShowBoss(true);
+        setCheatMessage('👔 THE BOSS!');
+        setTimeout(() => setShowBoss(false), 4000);
+        break;
+      case 'alan':
+        setShowAlan(true);
+        setCheatMessage('🧠 ALAN!');
+        setTimeout(() => setShowAlan(false), 4000);
+        break;
+      case 'glep':
+        setShowGlep(true);
+        setCheatMessage('👽 GLEP!');
+        setTimeout(() => setShowGlep(false), 4000);
         break;
       default:
         setCheatMessage('❌ Unknown code...');
@@ -872,6 +907,33 @@ function App() {
             alt="Job"
             className="flying-job-img"
           />
+        </div>
+      )}
+
+      {/* Smiling Friends Pop-ups */}
+      {showPim && (
+        <div className="sf-popup sf-pim">
+          <img src="/smilingfriends/pimnobackground.png" alt="Pim" />
+        </div>
+      )}
+      {showCharlie && (
+        <div className="sf-popup sf-charlie">
+          <img src="/smilingfriends/pimnobackground.png" alt="Charlie" />
+        </div>
+      )}
+      {showBoss && (
+        <div className="sf-popup sf-boss">
+          <img src="/smilingfriends/pimnobackground.png" alt="The Boss" />
+        </div>
+      )}
+      {showAlan && (
+        <div className="sf-popup sf-alan">
+          <img src="/smilingfriends/pimnobackground.png" alt="Alan" />
+        </div>
+      )}
+      {showGlep && (
+        <div className="sf-popup sf-glep">
+          <img src="/smilingfriends/pimnobackground.png" alt="Glep" />
         </div>
       )}
 
