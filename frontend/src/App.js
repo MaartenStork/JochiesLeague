@@ -1189,14 +1189,16 @@ function App() {
               const video = fnafVideoRef.current;
               if (!video) return;
               
-              const reverse = () => {
+              let lastTime = performance.now();
+              const reverse = (now) => {
                 if (!fnafReversingRef.current || !fnafVideoRef.current) return;
-                video.currentTime -= 0.033; // ~30fps backwards
-                if (video.currentTime <= 0.033) {
-                  // Reached start, play forward again
-                  video.currentTime = 0;
+                const delta = (now - lastTime) / 1000; // seconds elapsed
+                lastTime = now;
+                video.currentTime = Math.max(0, video.currentTime - delta); // real-time reverse
+                if (video.currentTime <= 0) {
+                  // Reached start, close
                   fnafReversingRef.current = false;
-                  video.play();
+                  setShowFnaf(false);
                 } else {
                   requestAnimationFrame(reverse);
                 }
