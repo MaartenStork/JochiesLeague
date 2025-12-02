@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 import imageio
 from scipy.interpolate import griddata
+from scipy.ndimage import map_coordinates
 import os
 
 # Paths
@@ -20,9 +21,12 @@ NODES_PATH = os.path.join(IANMORPH_DIR, 'nodes (1).json')
 OUTPUT_PATH = os.path.join(IANMORPH_DIR, 'ian_morph.gif')
 
 # Settings
-NUM_FRAMES = 30  # Number of frames in the morph
-FRAME_DURATION = 0.066  # ~15fps, total ~2 seconds
-OUTPUT_SIZE = (400, 400)  # Output GIF size
+NUM_FRAMES = 40  # More frames = smoother animation
+FRAME_DURATION = 0.05  # 20fps, total 2 seconds
+OUTPUT_SIZE = (800, 800)  # Higher resolution for quality
+
+# Zoom/crop settings - zoom into center to remove sidebars
+ZOOM_FACTOR = 1.4  # 1.0 = no zoom, higher = more zoomed in
 
 
 def load_nodes(path):
@@ -34,23 +38,20 @@ def load_nodes(path):
 
 def create_mesh_grid(nodes, size):
     """Convert node list to mesh grid coordinates."""
-    # Nodes are in 0-1 normalized coordinates
     points = []
     values_x = []
     values_y = []
     
     for node in nodes:
-        # Source position (where to sample from)
         points.append([node['u'], node['v']])
-        # Destination position (where it appears)
         values_x.append(node['x'])
         values_y.append(node['y'])
     
     return np.array(points), np.array(values_x), np.array(values_y)
 
 
-def warp_image(img, nodes, size):
-    """Warp an image according to node positions."""
+def warp_image_bilinear(img, nodes, size):
+    """Warp an image with bilinear interpolation for smooth results."""
     h, w = size
     
     # Create output coordinate grid
@@ -61,17 +62,15 @@ def warp_image(img, nodes, size):
     # Get node mapping
     points, dest_x, dest_y = create_mesh_grid(nodes, size)
     
-    # Interpolate the warp field
-    # For each output pixel, find where to sample from input
     grid_points = np.column_stack([x_norm.ravel(), y_norm.ravel()])
     
-    # Map destination -> source using inverse mapping
+    # Map destination -> source
     source_x = griddata(
         np.column_stack([dest_x, dest_y]), 
         points[:, 0], 
         grid_points, 
         method='cubic',
-        fill_value=0
+        fill_value=0.5
     ).reshape(h, w)
     
     source_y = griddata(
@@ -79,23 +78,28 @@ def warp_image(img, nodes, size):
         points[:, 1], 
         grid_points, 
         method='cubic',
-        fill_value=0
+        fill_value=0.5
     ).reshape(h, w)
     
     # Convert to pixel coordinates
     img_h, img_w = img.shape[:2]
-    sample_x = (source_x * img_w).astype(np.float32)
-    sample_y = (source_y * img_h).astype(np.float32)
+    sample_x = source_x * (img_w - 1)
+    sample_y = source_y * (img_h - 1)
     
     # Clip to valid range
     sample_x = np.clip(sample_x, 0, img_w - 1)
     sample_y = np.clip(sample_y, 0, img_h - 1)
     
-    # Sample the image (simple nearest neighbor for speed)
-    sample_x_int = sample_x.astype(np.int32)
-    sample_y_int = sample_y.astype(np.int32)
+    # Use bilinear interpolation for each channel
+    warped = np.zeros((h, w, 3), dtype=np.uint8)
+    for c in range(3):
+        warped[:, :, c] = map_coordinates(
+            img[:, :, c].astype(np.float64),
+            [sample_y, sample_x],
+            order=1,  # Bilinear
+            mode='nearest'
+        ).astype(np.uint8)
     
-    warped = img[sample_y_int, sample_x_int]
     return warped
 
 
@@ -112,13 +116,34 @@ def interpolate_nodes(nodes1, nodes2, t):
     return interpolated
 
 
+def crop_center_zoom(img, zoom_factor):
+    """Crop and zoom into center of image."""
+    h, w = img.shape[:2]
+    
+    # Calculate crop region
+    crop_h = int(h / zoom_factor)
+    crop_w = int(w / zoom_factor)
+    
+    start_y = (h - crop_h) // 2
+    start_x = (w - crop_w) // 2
+    
+    # Crop
+    cropped = img[start_y:start_y+crop_h, start_x:start_x+crop_w]
+    
+    # Resize back to original size
+    cropped_pil = Image.fromarray(cropped)
+    resized = cropped_pil.resize((w, h), Image.Resampling.LANCZOS)
+    
+    return np.array(resized)
+
+
 def generate_morph_gif():
     """Generate the morph GIF."""
     print("Loading images...")
     img1 = Image.open(IMG1_PATH).convert('RGB')
     img2 = Image.open(IMG2_PATH).convert('RGB')
     
-    # Resize to output size
+    # Resize to output size (high quality)
     img1 = img1.resize(OUTPUT_SIZE, Image.Resampling.LANCZOS)
     img2 = img2.resize(OUTPUT_SIZE, Image.Resampling.LANCZOS)
     
@@ -128,43 +153,45 @@ def generate_morph_gif():
     print("Loading node mapping...")
     nodes1, nodes2 = load_nodes(NODES_PATH)
     
-    print(f"Generating {NUM_FRAMES} frames...")
+    print(f"Generating {NUM_FRAMES} frames at {OUTPUT_SIZE[0]}x{OUTPUT_SIZE[1]}...")
     frames = []
     
     for i in range(NUM_FRAMES):
         t = i / (NUM_FRAMES - 1)
         print(f"  Frame {i+1}/{NUM_FRAMES} (t={t:.2f})")
         
-        # Interpolate nodes
-        current_nodes1 = interpolate_nodes(nodes1, nodes1, 0)  # Keep nodes1 fixed for source
-        current_nodes2 = interpolate_nodes(nodes1, nodes2, t)  # Interpolate for warp
-        
         # Warp both images to interpolated positions
-        warped1 = warp_image(img1_np, interpolate_nodes(nodes1, nodes2, t), OUTPUT_SIZE)
-        warped2 = warp_image(img2_np, interpolate_nodes(nodes2, nodes1, 1-t), OUTPUT_SIZE)
+        warped1 = warp_image_bilinear(img1_np, interpolate_nodes(nodes1, nodes2, t), OUTPUT_SIZE)
+        warped2 = warp_image_bilinear(img2_np, interpolate_nodes(nodes2, nodes1, 1-t), OUTPUT_SIZE)
         
         # Cross-fade between warped images
         alpha = t
-        blended = (warped1 * (1 - alpha) + warped2 * alpha).astype(np.uint8)
+        blended = (warped1.astype(np.float64) * (1 - alpha) + warped2.astype(np.float64) * alpha).astype(np.uint8)
         
-        frames.append(blended)
+        # Zoom into center to remove sidebars
+        zoomed = crop_center_zoom(blended, ZOOM_FACTOR)
+        
+        frames.append(zoomed)
     
+    # Save as GIF - play ONCE (loop=1 means play once then stop... but for GIF we need a different approach)
+    # GIF loop: 0 = infinite, 1+ = play that many times. But most browsers ignore this.
+    # We'll set loop=1 but note that browser support varies
     print(f"Saving GIF to {OUTPUT_PATH}...")
     imageio.mimsave(
         OUTPUT_PATH, 
         frames, 
         duration=FRAME_DURATION,
-        loop=0  # Loop forever
+        loop=1  # Play once (though browser support varies)
     )
     
-    # Also save as WebP for better quality/size
+    # Also save as WebP - better quality and supports loop control
     webp_path = OUTPUT_PATH.replace('.gif', '.webp')
     print(f"Saving WebP to {webp_path}...")
     imageio.mimsave(
         webp_path,
         frames,
         duration=FRAME_DURATION,
-        loop=0
+        loop=1  # Play once
     )
     
     print("Done!")
@@ -175,4 +202,3 @@ def generate_morph_gif():
 
 if __name__ == '__main__':
     generate_morph_gif()
-
