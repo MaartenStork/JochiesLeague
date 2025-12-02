@@ -1295,7 +1295,7 @@ body::before {
 /* Position each character */
 .sf-pim { left: 5%; }
 .sf-charlie { left: 25%; }
-.sf-boss { left: 45%; transform: translateX(-50%); }
+.sf-boss { left: 50%; margin-left: -60px; } /* Center with margin instead of transform */
 .sf-alan { right: 25%; }
 .sf-glep { right: 5%; }
 
@@ -1322,25 +1322,10 @@ body::before {
   }
 }
 
-/* Override bounce for boss (centered) */
-.sf-boss {
-  animation: sf-pop-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-             sf-bounce-boss 0.5s ease-in-out 0.4s infinite alternate,
-             sf-fade-out 0.5s ease-in 3.5s forwards;
-}
-
-@keyframes sf-bounce-boss {
-  0% {
-    transform: translateX(-50%) translateY(0);
-  }
-  100% {
-    transform: translateX(-50%) translateY(-15px);
-  }
-}
-
 @keyframes sf-fade-out {
   0% {
     opacity: 1;
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
@@ -1356,7 +1341,7 @@ body::before {
   
   .sf-pim { left: 2%; }
   .sf-charlie { left: 22%; }
-  .sf-boss { left: 50%; }
+  .sf-boss { left: 50%; margin-left: -40px; }
   .sf-alan { right: 22%; }
   .sf-glep { right: 2%; }
 }
