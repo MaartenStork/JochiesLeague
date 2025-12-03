@@ -91,6 +91,9 @@ function App() {
   const fnafVideoRef = useRef(null);
   const fnafReversingRef = useRef(false);
 
+  // 67 tilt easter egg
+  const [show67Tilt, setShow67Tilt] = useState(false);
+
   // Ranking game easter egg
   const [showRanking, setShowRanking] = useState(false);
   const [rankingAnswers, setRankingAnswers] = useState({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
@@ -470,6 +473,13 @@ function App() {
       case 'freddy':
       case 'jumpscare':
         setShowFnaf(true);
+        break;
+      case '67':
+      case '6 7':
+      case 'sixseven':
+      case 'six seven':
+        setShow67Tilt(true);
+        setTimeout(() => setShow67Tilt(false), 2000);
         break;
       case 'smiling friends':
       case 'smilingfriends':
@@ -971,7 +981,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${show67Tilt ? 'tilt-67' : ''}`}>
       <header className="header">
         <h1 className="logo">Jo<span ref={dropZoneRef} className={`b-drop-zone ${isDraggingB ? 'active' : ''} ${bPlaced ? 'has-b' : ''}`} onDragOver={handleDropZoneDragOver} onDrop={handleDropZoneDrop}>{bPlaced && 'b'}</span>{bPlaced ? ' chies' : 'chies'} League</h1>
         <p className="tagline">SP grind time</p>
