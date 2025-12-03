@@ -585,6 +585,7 @@ function App() {
         if (newAttempts >= 3) {
           setCheatMessage('ewa fout gedaan, aap tijd');
           setMonkeyCursor(true);
+          discoverSecret('monkey_cursor'); // Monkey cursor is a secret!
         } else {
           setCheatMessage(`❌ Unknown code... (${newAttempts}/3)`);
         }
@@ -1094,13 +1095,15 @@ function App() {
             {showSecretCounter && secretProgress && (
               <div className="secret-counter-widget">
                 <div 
-                  className="secret-counter-badge"
+                  className="secret-counter-main"
                   onClick={() => setSecretDropdownOpen(!secretDropdownOpen)}
                 >
-                  <span className="secret-counter-icon">🎯</span>
-                  <span className="secret-counter-text">
-                    {secretProgress.percentage}%
-                  </span>
+                  <div className="secret-progress-bar">
+                    <div 
+                      className="secret-progress-fill"
+                      style={{ width: `${secretProgress.percentage}%` }}
+                    />
+                  </div>
                 </div>
                 
                 {secretDropdownOpen && (

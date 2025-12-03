@@ -489,6 +489,7 @@ ALL_SECRETS = [
     'brainrot',        # Brainrot videos
     'fnaf',            # FNAF jumpscare
     'six_seven',       # 67 tilt
+    'monkey_cursor',   # Triggered monkey cursor punishment
     'counter'          # Finding the secret counter
 ]
 

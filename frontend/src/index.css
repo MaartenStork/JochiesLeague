@@ -248,33 +248,44 @@ body::before {
   position: relative;
 }
 
-.secret-counter-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+.secret-counter-main {
+  min-width: 140px;
+  padding: 0.6rem 0.8rem;
   background: var(--bg-card);
   border: 2px solid var(--accent);
-  border-radius: 20px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.secret-counter-badge:hover {
+.secret-counter-main:hover {
   background: var(--bg-secondary);
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: 0 0 20px var(--accent-glow);
 }
 
-.secret-counter-icon {
-  font-size: 1.2rem;
+.secret-progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--bg-secondary);
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-.secret-counter-text {
+.secret-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #00ddaa);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.secret-percentage {
+  text-align: center;
   font-weight: 700;
   color: var(--accent);
-  font-size: 1rem;
+  font-size: 0.85rem;
 }
 
 .secret-dropdown-backdrop {
