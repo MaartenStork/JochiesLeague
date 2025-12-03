@@ -94,6 +94,9 @@ function App() {
   // 67 tilt easter egg
   const [show67Tilt, setShow67Tilt] = useState(false);
 
+  // Secret tracking
+  const [secretProgress, setSecretProgress] = useState(null);
+
   // Ranking game easter egg
   const [showRanking, setShowRanking] = useState(false);
   const [rankingAnswers, setRankingAnswers] = useState({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
@@ -183,8 +186,9 @@ function App() {
   useEffect(() => {
     if (user) {
       fetchStatus();
+      fetchSecretProgress();
     }
-  }, [user, fetchStatus]);
+  }, [user, fetchStatus, fetchSecretProgress]);
 
   useEffect(() => {
     if (user && checkedIn) {
@@ -287,6 +291,8 @@ function App() {
       angle: 120,
       colors: ['#00ff88', '#ffd700', '#ff4466', '#00ddaa']
     });
+    // Track secret discovery
+    discoverSecret('job_click');
     // Remove the clicked Job
     setFlyingJobs(prev => prev.filter(job => job.id !== jobId));
   };
@@ -311,6 +317,8 @@ function App() {
     e.preventDefault();
     if (e.dataTransfer.getData('text/plain') === 'B') {
       setBPlaced(true);
+      // Track secret discovery
+      discoverSecret('b_drag');
       // Celebration!
       confetti({
         particleCount: 200,
@@ -354,6 +362,8 @@ function App() {
       touch.clientY <= dropRect.bottom + tolerance
     ) {
       setBPlaced(true);
+      // Track secret discovery
+      discoverSecret('b_drag');
       confetti({
         particleCount: 200,
         spread: 100,
@@ -388,6 +398,7 @@ function App() {
       case 'joblabubu':
       case 'labubujob':
         spawnFlyingJob();
+        // Note: job_click is tracked when clicking the flying job
         break;
       case 'chess':
       case 'schaken':
@@ -395,10 +406,12 @@ function App() {
       case 'chessgame':
       case 'chess game':
         startChessGame();
+        discoverSecret('chess');
         break;
       case 'ian':
         setShowIanFlashbang(true);
         setIanFadingOut(false);
+        discoverSecret('ian');
         // Reset GIF by clearing and re-setting src (restarts from frame 1)
         setTimeout(() => {
           if (ianGifRef.current) {
@@ -424,12 +437,14 @@ function App() {
         if (sfGroupActive) break; // Don't interrupt group animation
         setSfStaggered(false);
         setShowPim(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => setShowPim(false), 4000);
         break;
       case 'charlie':
         if (sfGroupActive) break;
         setSfStaggered(false);
         setShowCharlie(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => setShowCharlie(false), 4000);
         break;
       case 'boss':
@@ -438,18 +453,21 @@ function App() {
         if (sfGroupActive) break;
         setSfStaggered(false);
         setShowBoss(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => setShowBoss(false), 4000);
         break;
       case 'alan':
         if (sfGroupActive) break;
         setSfStaggered(false);
         setShowAlan(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => setShowAlan(false), 4000);
         break;
       case 'glep':
         if (sfGroupActive) break;
         setSfStaggered(false);
         setShowGlep(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => setShowGlep(false), 4000);
         break;
       case 'ranking':
@@ -457,12 +475,14 @@ function App() {
         setRankingAnswers({1: null, 2: null, 3: null, 4: null, 5: null, 6: null});
         setRankingComplete(false);
         setRankingChecked(false);
+        discoverSecret('ranking');
         break;
       case 'brainrot':
       case 'brain rot':
         setBrainrotLoaded({ left: false, right: false });
         setShowBrainrotLeft(true);
         setShowBrainrotRight(true);
+        discoverSecret('brainrot');
         break;
       case 'rabbit':
       case 'konijn':
@@ -473,12 +493,14 @@ function App() {
       case 'freddy':
       case 'jumpscare':
         setShowFnaf(true);
+        discoverSecret('fnaf');
         break;
       case '67':
       case '6 7':
       case 'sixseven':
       case 'six seven':
         setShow67Tilt(true);
+        discoverSecret('six_seven');
         setTimeout(() => setShow67Tilt(false), 2000);
         break;
       case 'smiling friends':
@@ -492,6 +514,7 @@ function App() {
         setShowBoss(true);
         setShowAlan(true);
         setShowGlep(true);
+        discoverSecret('smiling_friends');
         setTimeout(() => {
           setShowPim(false);
           setShowCharlie(false);
@@ -500,6 +523,20 @@ function App() {
           setShowGlep(false);
           setSfGroupActive(false);
         }, 5000);
+        break;
+      case 'counter':
+      case 'progress':
+      case 'secrets':
+        fetchSecretProgress();
+        if (secretProgress) {
+          setCheatMessage(`🎯 Secrets found: ${secretProgress.total_found}/${secretProgress.total_secrets} (${secretProgress.percentage}%)`);
+        } else {
+          setCheatMessage('Loading progress...');
+          setTimeout(() => {
+            fetchSecretProgress();
+          }, 500);
+        }
+        success = true; // Don't count as wrong attempt
         break;
       default:
         const newAttempts = wrongAttempts + 1;
@@ -932,6 +969,46 @@ function App() {
       setReactingTo(null);
     }
   };
+
+  // Track secret discovery
+  const discoverSecret = async (secretCode) => {
+    if (!user) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/secret/discover`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({ secret_code: secretCode })
+      });
+      
+      const data = await res.json();
+      if (res.ok && !data.already_found) {
+        console.log(`🎉 New secret discovered: ${secretCode}! (${data.percentage}%)`);
+      }
+    } catch (err) {
+      console.error('Error recording secret:', err);
+    }
+  };
+
+  // Fetch secret progress
+  const fetchSecretProgress = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/secret/progress`, {
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        setSecretProgress(data);
+      }
+    } catch (err) {
+      console.error('Error fetching secret progress:', err);
+    }
+  }, [user]);
 
   if (loading) {
     return (

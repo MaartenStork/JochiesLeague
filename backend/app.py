@@ -10,7 +10,7 @@ from flask_login import LoginManager, login_user, logout_user, current_user, log
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 
-from models import db, User, CheckIn, Reaction
+from models import db, User, CheckIn, Reaction, UserSecret
 
 load_dotenv()
 
@@ -475,6 +475,88 @@ def get_history():
         history.append(day_data)
     
     return jsonify({'history': history})
+
+# ============ SECRETS TRACKING ============
+
+# List of all available secrets
+ALL_SECRETS = [
+    'b_drag',          # Dragging B to make "Job" in title
+    'job_click',       # Clicking flying Job
+    'chess',           # Playing chess
+    'ian',             # Ian flashbang
+    'smiling_friends', # Any smiling friends character
+    'ranking',         # Ranking game
+    'brainrot',        # Brainrot videos
+    'fnaf',            # FNAF jumpscare
+    'six_seven'        # 67 tilt
+]
+
+@app.route('/api/secret/discover', methods=['POST'])
+@api_login_required
+def discover_secret():
+    """Record that a user discovered a secret."""
+    user = request.api_user
+    data = request.get_json()
+    
+    if not data or 'secret_code' not in data:
+        return jsonify({'error': 'Missing secret_code'}), 400
+    
+    secret_code = data['secret_code']
+    
+    if secret_code not in ALL_SECRETS:
+        return jsonify({'error': 'Invalid secret_code'}), 400
+    
+    # Check if already discovered
+    existing = UserSecret.query.filter_by(
+        user_id=user.id,
+        secret_code=secret_code
+    ).first()
+    
+    if existing:
+        return jsonify({
+            'already_found': True,
+            'message': 'You already found this secret!'
+        })
+    
+    # Record the discovery
+    secret = UserSecret(
+        user_id=user.id,
+        secret_code=secret_code
+    )
+    db.session.add(secret)
+    db.session.commit()
+    
+    # Calculate progress
+    total_found = UserSecret.query.filter_by(user_id=user.id).count()
+    percentage = round((total_found / len(ALL_SECRETS)) * 100)
+    
+    return jsonify({
+        'success': True,
+        'message': f'New secret discovered: {secret_code}!',
+        'total_found': total_found,
+        'total_secrets': len(ALL_SECRETS),
+        'percentage': percentage
+    })
+
+@app.route('/api/secret/progress')
+@api_login_required
+def get_secret_progress():
+    """Get user's secret discovery progress."""
+    user = request.api_user
+    
+    found_secrets = UserSecret.query.filter_by(user_id=user.id).all()
+    found_codes = [s.secret_code for s in found_secrets]
+    
+    total_found = len(found_codes)
+    percentage = round((total_found / len(ALL_SECRETS)) * 100)
+    
+    return jsonify({
+        'total_found': total_found,
+        'total_secrets': len(ALL_SECRETS),
+        'percentage': percentage,
+        'found_secrets': found_codes,
+        'all_secrets': ALL_SECRETS
+    })
 
 # ============ HEALTH CHECK ============
 

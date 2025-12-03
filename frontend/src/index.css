@@ -61,49 +61,62 @@ body::before {
 
 /* 67 tilt easter egg */
 .app.tilt-67 {
-  animation: tilt67 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation: tilt67 2s linear;
+  will-change: transform;
 }
 
 @keyframes tilt67 {
-  0% {
-    transform: rotate(0deg);
-  }
-  10% {
-    transform: rotate(-8deg);
-  }
-  20% {
-    transform: rotate(-18deg);
-  }
-  25% {
-    transform: rotate(-25deg);
-  }
-  35% {
-    transform: rotate(-15deg);
-  }
-  45% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(0deg);
-  }
-  60% {
-    transform: rotate(8deg);
-  }
-  70% {
-    transform: rotate(18deg);
-  }
-  75% {
-    transform: rotate(25deg);
-  }
-  85% {
-    transform: rotate(15deg);
-  }
-  95% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
+  0% { transform: rotate(0deg); }
+  2% { transform: rotate(-2deg); }
+  4% { transform: rotate(-4deg); }
+  6% { transform: rotate(-7deg); }
+  8% { transform: rotate(-10deg); }
+  10% { transform: rotate(-13deg); }
+  12% { transform: rotate(-16deg); }
+  14% { transform: rotate(-19deg); }
+  16% { transform: rotate(-21deg); }
+  18% { transform: rotate(-23deg); }
+  20% { transform: rotate(-25deg); }
+  22% { transform: rotate(-25deg); }
+  24% { transform: rotate(-24deg); }
+  26% { transform: rotate(-22deg); }
+  28% { transform: rotate(-19deg); }
+  30% { transform: rotate(-16deg); }
+  32% { transform: rotate(-12deg); }
+  34% { transform: rotate(-8deg); }
+  36% { transform: rotate(-5deg); }
+  38% { transform: rotate(-2deg); }
+  40% { transform: rotate(0deg); }
+  42% { transform: rotate(0deg); }
+  44% { transform: rotate(0deg); }
+  46% { transform: rotate(0deg); }
+  48% { transform: rotate(0deg); }
+  50% { transform: rotate(2deg); }
+  52% { transform: rotate(4deg); }
+  54% { transform: rotate(7deg); }
+  56% { transform: rotate(10deg); }
+  58% { transform: rotate(13deg); }
+  60% { transform: rotate(16deg); }
+  62% { transform: rotate(19deg); }
+  64% { transform: rotate(21deg); }
+  66% { transform: rotate(23deg); }
+  68% { transform: rotate(25deg); }
+  70% { transform: rotate(25deg); }
+  72% { transform: rotate(24deg); }
+  74% { transform: rotate(22deg); }
+  76% { transform: rotate(19deg); }
+  78% { transform: rotate(16deg); }
+  80% { transform: rotate(12deg); }
+  82% { transform: rotate(8deg); }
+  84% { transform: rotate(5deg); }
+  86% { transform: rotate(2deg); }
+  88% { transform: rotate(0deg); }
+  90% { transform: rotate(0deg); }
+  92% { transform: rotate(0deg); }
+  94% { transform: rotate(0deg); }
+  96% { transform: rotate(0deg); }
+  98% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
 }
 
 /* Header */

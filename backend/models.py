@@ -48,3 +48,17 @@ class Reaction(db.Model):
         db.UniqueConstraint('user_id', 'reaction_date', name='unique_user_reaction_per_day'),
     )
 
+class UserSecret(db.Model):
+    __tablename__ = 'user_secrets'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(255), db.ForeignKey('users.id'), nullable=False)
+    secret_code = db.Column(db.String(50), nullable=False)  # e.g. 'job_click', 'chess', 'ian'
+    discovered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='secrets_found')
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'secret_code', name='unique_user_secret'),
+    )
+
