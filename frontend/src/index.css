@@ -650,6 +650,74 @@ body::before {
   font-size: 0.9rem;
 }
 
+/* Reaction buttons */
+.feed-reactions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.reaction-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.reaction-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.reaction-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.reaction-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.reaction-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reaction-count {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.feed-reactions-readonly {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  justify-content: center;
+}
+
+.reaction-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
 /* Loading spinner */
 .spinner {
   width: 40px;

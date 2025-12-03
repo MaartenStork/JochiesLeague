@@ -26,7 +26,25 @@ class CheckIn(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     photo_data = db.Column(db.Text, nullable=True)  # Base64 encoded photo
     
+    reactions_received = db.relationship('Reaction', backref='checkin', lazy=True)
+    
     __table_args__ = (
         db.UniqueConstraint('user_id', 'check_in_date', name='unique_user_date'),
+    )
+
+class Reaction(db.Model):
+    __tablename__ = 'reactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(255), db.ForeignKey('users.id'), nullable=False)  # Who gave the reaction
+    checkin_id = db.Column(db.Integer, db.ForeignKey('checkins.id'), nullable=False)  # Which check-in
+    reaction_type = db.Column(db.String(10), nullable=False)  # 'like' or 'dislike'
+    reaction_date = db.Column(db.Date, nullable=False)  # Date the reaction was given
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='reactions_given')
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'reaction_date', name='unique_user_reaction_per_day'),
     )
 

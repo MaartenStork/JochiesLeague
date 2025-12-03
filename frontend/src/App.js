@@ -60,6 +60,10 @@ function App() {
   // Profile dropdown
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  // Reactions state
+  const [myReaction, setMyReaction] = useState(null); // { has_reacted: bool, reaction_type: 'like'/'dislike', checkin_id: number }
+  const [reactingTo, setReactingTo] = useState(null); // checkin_id currently being reacted to (for loading state)
+
   // Ian flashbang easter egg
   const [showIanFlashbang, setShowIanFlashbang] = useState(false);
   const [ianFadingOut, setIanFadingOut] = useState(false);
@@ -153,6 +157,21 @@ function App() {
     }
   }, []);
 
+  // Fetch user's reaction for today
+  const fetchMyReaction = useCallback(async () => {
+    if (!user || !checkedIn) return;
+    try {
+      const res = await fetch(`${API_URL}/api/my-reaction`, {
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setMyReaction(data);
+    } catch (err) {
+      console.error('Error fetching my reaction:', err);
+    }
+  }, [user, checkedIn]);
+
   useEffect(() => {
     fetchUser();
     fetchLeaderboard();
@@ -163,6 +182,12 @@ function App() {
       fetchStatus();
     }
   }, [user, fetchStatus]);
+
+  useEffect(() => {
+    if (user && checkedIn) {
+      fetchMyReaction();
+    }
+  }, [user, checkedIn, fetchMyReaction]);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -854,6 +879,50 @@ function App() {
     });
   };
 
+  const handleReaction = async (checkinId, reactionType) => {
+    if (!user || !checkedIn) {
+      setMessage({ type: 'error', text: 'You must check in before giving reactions' });
+      return;
+    }
+
+    // Prevent double-clicking
+    if (reactingTo) return;
+
+    setReactingTo(checkinId);
+
+    try {
+      const res = await fetch(`${API_URL}/api/react`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({
+          checkin_id: checkinId,
+          reaction_type: reactionType
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Update local reaction state
+        setMyReaction({
+          has_reacted: true,
+          reaction_type: reactionType,
+          checkin_id: checkinId
+        });
+        // Refresh leaderboard to get updated counts
+        fetchLeaderboard();
+      } else {
+        setMessage({ type: 'error', text: data.error });
+      }
+    } catch (err) {
+      console.error('Error giving reaction:', err);
+      setMessage({ type: 'error', text: 'Failed to give reaction' });
+    } finally {
+      setReactingTo(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="app">
@@ -1036,6 +1105,34 @@ function App() {
                     </div>
                   )}
                 </div>
+
+                {/* Reaction buttons - only show if user is checked in and not their own post */}
+                {user && checkedIn && entry.checkin_id && user.name !== entry.name && (
+                  <div className="feed-reactions">
+                    <button
+                      className={`reaction-btn ${myReaction?.checkin_id === entry.checkin_id && myReaction?.reaction_type === 'like' ? 'active' : ''}`}
+                      onClick={() => handleReaction(entry.checkin_id, 'like')}
+                      disabled={reactingTo !== null}
+                    >
+                      👍 <span className="reaction-count">{entry.likes || 0}</span>
+                    </button>
+                    <button
+                      className={`reaction-btn ${myReaction?.checkin_id === entry.checkin_id && myReaction?.reaction_type === 'dislike' ? 'active' : ''}`}
+                      onClick={() => handleReaction(entry.checkin_id, 'dislike')}
+                      disabled={reactingTo !== null}
+                    >
+                      👎 <span className="reaction-count">{entry.dislikes || 0}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Show reaction counts even if user can't react */}
+                {(!user || !checkedIn || user.name === entry.name) && (
+                  <div className="feed-reactions-readonly">
+                    <span className="reaction-stat">👍 {entry.likes || 0}</span>
+                    <span className="reaction-stat">👎 {entry.dislikes || 0}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

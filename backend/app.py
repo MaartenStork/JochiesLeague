@@ -10,7 +10,7 @@ from flask_login import LoginManager, login_user, logout_user, current_user, log
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 
-from models import db, User, CheckIn
+from models import db, User, CheckIn, Reaction
 
 load_dotenv()
 
@@ -312,11 +312,105 @@ def get_status():
         })
     return jsonify({'checked_in': False})
 
+# ============ REACTION ROUTES ============
+
+@app.route('/api/react', methods=['POST'])
+@api_login_required
+def give_reaction():
+    """Give a like or dislike to a check-in."""
+    user = request.api_user
+    data = request.get_json()
+    
+    if not data or 'checkin_id' not in data or 'reaction_type' not in data:
+        return jsonify({'error': 'Missing checkin_id or reaction_type'}), 400
+    
+    checkin_id = data['checkin_id']
+    reaction_type = data['reaction_type'].lower()
+    
+    if reaction_type not in ['like', 'dislike']:
+        return jsonify({'error': 'reaction_type must be "like" or "dislike"'}), 400
+    
+    # Get the check-in
+    checkin = CheckIn.query.get(checkin_id)
+    if not checkin:
+        return jsonify({'error': 'Check-in not found'}), 404
+    
+    today = date.today()
+    
+    # Rule: Check-in must be from today
+    if checkin.check_in_date != today:
+        return jsonify({'error': 'Can only react to today\'s check-ins'}), 400
+    
+    # Rule: Can't react to your own check-in
+    if checkin.user_id == user.id:
+        return jsonify({'error': 'Cannot react to your own check-in'}), 400
+    
+    # Rule: Must have checked in today to give reactions
+    user_checkin = CheckIn.query.filter_by(
+        user_id=user.id,
+        check_in_date=today
+    ).first()
+    
+    if not user_checkin:
+        return jsonify({'error': 'Must check in today before giving reactions'}), 400
+    
+    # Check if user already reacted today
+    existing_reaction = Reaction.query.filter_by(
+        user_id=user.id,
+        reaction_date=today
+    ).first()
+    
+    if existing_reaction:
+        # Update existing reaction
+        existing_reaction.checkin_id = checkin_id
+        existing_reaction.reaction_type = reaction_type
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'Changed reaction to {reaction_type}',
+            'reaction_type': reaction_type
+        })
+    else:
+        # Create new reaction
+        reaction = Reaction(
+            user_id=user.id,
+            checkin_id=checkin_id,
+            reaction_type=reaction_type,
+            reaction_date=today
+        )
+        db.session.add(reaction)
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'Gave {reaction_type} successfully',
+            'reaction_type': reaction_type
+        })
+
+@app.route('/api/my-reaction')
+@api_login_required
+def get_my_reaction():
+    """Get current user's reaction for today."""
+    user = request.api_user
+    today = date.today()
+    
+    reaction = Reaction.query.filter_by(
+        user_id=user.id,
+        reaction_date=today
+    ).first()
+    
+    if reaction:
+        return jsonify({
+            'has_reacted': True,
+            'reaction_type': reaction.reaction_type,
+            'checkin_id': reaction.checkin_id
+        })
+    return jsonify({'has_reacted': False})
+
 # ============ LEADERBOARD ROUTES ============
 
 @app.route('/api/leaderboard')
 def get_leaderboard():
-    """Get today's leaderboard."""
+    """Get today's leaderboard with reaction counts."""
     today = date.today()
     checkins = CheckIn.query.filter_by(check_in_date=today)\
         .order_by(CheckIn.check_in_time.asc())\
@@ -324,12 +418,26 @@ def get_leaderboard():
     
     leaderboard = []
     for i, checkin in enumerate(checkins):
+        # Count likes and dislikes for this check-in
+        likes = Reaction.query.filter_by(
+            checkin_id=checkin.id,
+            reaction_type='like'
+        ).count()
+        
+        dislikes = Reaction.query.filter_by(
+            checkin_id=checkin.id,
+            reaction_type='dislike'
+        ).count()
+        
         leaderboard.append({
             'rank': i + 1,
+            'checkin_id': checkin.id,
             'name': checkin.user.name,
             'picture': checkin.user.picture,
             'check_in_time': checkin.check_in_time.isoformat(),
-            'photo': checkin.photo_data
+            'photo': checkin.photo_data,
+            'likes': likes,
+            'dislikes': dislikes
         })
     
     return jsonify({
