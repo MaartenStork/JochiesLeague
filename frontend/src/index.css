@@ -311,14 +311,6 @@ body::before {
   animation: slideDown 0.2s ease;
 }
 
-.secret-dropdown-header {
-  padding: 1rem;
-  font-weight: 600;
-  color: var(--accent);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.9rem;
-}
-
 .secret-list {
   padding: 0.5rem;
   max-height: 300px;

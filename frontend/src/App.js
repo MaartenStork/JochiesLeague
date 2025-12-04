@@ -96,9 +96,6 @@ function App() {
 
   // Secret tracking
   const [secretProgress, setSecretProgress] = useState(null);
-  const [showSecretCounter, setShowSecretCounter] = useState(() => {
-    return localStorage.getItem('show_secret_counter') === 'true';
-  });
   const [secretDropdownOpen, setSecretDropdownOpen] = useState(false);
 
   // Ranking game easter egg
@@ -137,26 +134,6 @@ function App() {
     }
   }, []);
 
-  // Track secret discovery
-  const discoverSecret = useCallback(async (secretCode) => {
-    if (!user) return;
-    
-    try {
-      const res = await fetch(`${API_URL}/api/secret/discover`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({ secret_code: secretCode })
-      });
-      
-      const data = await res.json();
-      if (res.ok && !data.already_found) {
-        console.log(`🎉 New secret discovered: ${secretCode}! (${data.percentage}%)`);
-      }
-    } catch (err) {
-      console.error('Error recording secret:', err);
-    }
-  }, [user]);
 
   // Fetch secret progress
   const fetchSecretProgress = useCallback(async () => {
@@ -176,6 +153,31 @@ function App() {
       console.error('Error fetching secret progress:', err);
     }
   }, [user]);
+
+  // Track secret discovery with immediate UI update
+  const discoverSecret = useCallback(async (secretCode) => {
+    if (!user) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/api/secret/discover`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({ secret_code: secretCode })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        if (!data.already_found) {
+          console.log(`🎉 New secret discovered: ${secretCode}! (${data.percentage}%)`);
+        }
+        // Immediately refresh progress to update the bar
+        fetchSecretProgress();
+      }
+    } catch (err) {
+      console.error('Error recording secret:', err);
+    }
+  }, [user, fetchSecretProgress]);
 
   // Fetch check-in status
   const fetchStatus = useCallback(async () => {
@@ -442,6 +444,7 @@ function App() {
       case 'joblabubu':
       case 'labubujob':
         spawnFlyingJob();
+        discoverSecret('job_spawn'); // Typing "job" is a secret!
         // Note: job_click is tracked when clicking the flying job
         break;
       case 'chess':
@@ -571,12 +574,9 @@ function App() {
       case 'counter':
       case 'progress':
       case 'secrets':
-        // Enable persistent counter display
-        setShowSecretCounter(true);
-        localStorage.setItem('show_secret_counter', 'true');
-        discoverSecret('counter'); // The counter itself is a secret!
-        fetchSecretProgress();
-        setCheatMessage('🎯 Secret counter enabled!');
+        // Discover the counter secret (this will make the bar appear instantly)
+        discoverSecret('counter');
+        setCheatMessage('🎯 Secret counter unlocked!');
         success = true; // Don't count as wrong attempt
         break;
       default:
@@ -1091,8 +1091,8 @@ function App() {
               </>
             )}
             
-            {/* Secret Counter Widget */}
-            {showSecretCounter && secretProgress && (
+            {/* Secret Counter Widget - only shows if user has found the "counter" secret */}
+            {secretProgress && secretProgress.found_secrets.includes('counter') && (
               <div className="secret-counter-widget">
                 <div 
                   className="secret-counter-main"
@@ -1110,9 +1110,6 @@ function App() {
                   <>
                     <div className="secret-dropdown-backdrop" onClick={() => setSecretDropdownOpen(false)} />
                     <div className="secret-dropdown">
-                      <div className="secret-dropdown-header">
-                        Secrets Found ({secretProgress.total_found}/{secretProgress.total_secrets})
-                      </div>
                       <div className="secret-list">
                         {secretProgress.found_secrets.map(secret => (
                           <div key={secret} className="secret-item">

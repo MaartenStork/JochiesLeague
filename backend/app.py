@@ -481,6 +481,7 @@ def get_history():
 # List of all available secrets
 ALL_SECRETS = [
     'b_drag',          # Dragging B to make "Job" in title
+    'job_spawn',       # Typing "job" to spawn flying Job
     'job_click',       # Clicking flying Job
     'chess',           # Playing chess
     'ian',             # Ian flashbang
