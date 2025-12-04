@@ -1725,32 +1725,36 @@ function App() {
         </div>
       )}
 
-      {/* Cheat Code Console */}
-      {cheatConsoleOpen && (
-        <div className="cheat-backdrop" onClick={() => setCheatConsoleOpen(false)} />
+      {/* Cheat Code Console - Only show when logged in */}
+      {user && (
+        <>
+          {cheatConsoleOpen && (
+            <div className="cheat-backdrop" onClick={() => setCheatConsoleOpen(false)} />
+          )}
+          <div className={`cheat-console ${cheatConsoleOpen ? 'open' : ''}`}>
+            <div 
+              className="cheat-tab"
+              onClick={() => setCheatConsoleOpen(!cheatConsoleOpen)}
+            >
+              <span className="cheat-tab-icon">{cheatConsoleOpen ? '✕' : '⌨️'}</span>
+            </div>
+            <div className="cheat-panel">
+              <form onSubmit={handleCheatSubmit}>
+                <input
+                  type="text"
+                  value={cheatCode}
+                  onChange={(e) => setCheatCode(e.target.value)}
+                  placeholder="Enter code..."
+                  className="cheat-input"
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </form>
+              {cheatMessage && <div className="cheat-message">{cheatMessage}</div>}
+            </div>
+          </div>
+        </>
       )}
-      <div className={`cheat-console ${cheatConsoleOpen ? 'open' : ''}`}>
-        <div 
-          className="cheat-tab"
-          onClick={() => setCheatConsoleOpen(!cheatConsoleOpen)}
-        >
-          <span className="cheat-tab-icon">{cheatConsoleOpen ? '✕' : '⌨️'}</span>
-        </div>
-        <div className="cheat-panel">
-          <form onSubmit={handleCheatSubmit}>
-            <input
-              type="text"
-              value={cheatCode}
-              onChange={(e) => setCheatCode(e.target.value)}
-              placeholder="Enter code..."
-              className="cheat-input"
-              autoComplete="off"
-              spellCheck="false"
-            />
-          </form>
-          {cheatMessage && <div className="cheat-message">{cheatMessage}</div>}
-        </div>
-      </div>
 
       {/* Rabbit Clock - Late Check-in (after 12:00) */}
       {showRabbitClock && (
