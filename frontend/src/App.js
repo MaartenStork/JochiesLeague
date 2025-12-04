@@ -159,22 +159,12 @@ function App() {
     }
   }, []);
 
-  // Load saved theme and unlocked themes from localStorage
+  // Load saved theme from localStorage (unlocked themes come from secrets)
   useEffect(() => {
     const savedTheme = localStorage.getItem('currentTheme');
-    const savedUnlockedThemes = localStorage.getItem('unlockedThemes');
     
     if (savedTheme && themes[savedTheme]) {
       setCurrentTheme(savedTheme);
-    }
-    
-    if (savedUnlockedThemes) {
-      try {
-        const parsed = JSON.parse(savedUnlockedThemes);
-        setUnlockedThemes(parsed);
-      } catch (e) {
-        console.error('Error parsing unlocked themes:', e);
-      }
     }
   }, []);
 
@@ -236,6 +226,23 @@ function App() {
       const data = await res.json();
       if (res.ok) {
         setSecretProgress(data);
+        
+        // Auto-unlock themes based on secrets
+        const newUnlockedThemes = ['default'];
+        
+        // Check for kabouter theme
+        if (data.found_secrets.includes('theme_kabouter')) {
+          newUnlockedThemes.push('kabouter');
+        }
+        
+        // Check for chess theme
+        if (data.found_secrets.includes('chess_victory')) {
+          newUnlockedThemes.push('chess');
+        }
+        
+        // Update unlocked themes
+        setUnlockedThemes(newUnlockedThemes);
+        localStorage.setItem('unlockedThemes', JSON.stringify(newUnlockedThemes));
       }
     } catch (err) {
       console.error('Error fetching secret progress:', err);
@@ -858,7 +865,7 @@ function App() {
                 colors: unlocked ? ['#d4af37', '#b8941f', '#ffd700'] : ['#00ff88', '#ffd700', '#ff4466']
               });
               discoverSecret('chess_victory');
-              alert('♔ You win! Checkmate! Chess Master theme unlocked! 🏆');
+              alert('♔ Fakka Job ♔');
             }, 100);
             return;
           } else if (chess.isDraw()) {
