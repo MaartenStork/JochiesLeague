@@ -805,10 +805,11 @@ function App() {
   };
 
   // Progress bar shake handlers
-  const handleBarGrab = (e) => {
+  const handleBarGrab = useCallback((e) => {
     if (barExploded || !barRef.current) return;
     
     e.preventDefault();
+    e.stopPropagation();
     
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -837,12 +838,13 @@ function App() {
     });
     
     setIsShakingBar(false);
-  };
+  }, [barExploded]);
 
-  const handleBarMove = (e) => {
+  const handleBarMove = useCallback((e) => {
     if (!shakeDataRef.current.isGrabbing || barExploded) return;
     
     e.preventDefault();
+    e.stopPropagation();
     
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -883,9 +885,9 @@ function App() {
     if (rapidMovements.length >= 10) {
       triggerBarExplosion();
     }
-  };
+  }, [barExploded, triggerBarExplosion]);
 
-  const handleBarRelease = () => {
+  const handleBarRelease = useCallback(() => {
     shakeDataRef.current.isGrabbing = false;
     
     // Reset position and shake visual after a delay
@@ -896,9 +898,9 @@ function App() {
       setIsShakingBar(false);
       setBarPosition(null); // Return to original position
     }, 200);
-  };
+  }, []);
 
-  const triggerBarExplosion = () => {
+  const triggerBarExplosion = useCallback(() => {
     if (barExploded) return;
     
     setBarExploded(true);
@@ -943,27 +945,36 @@ function App() {
     
     // Track secret discovery
     discoverSecret('bar_explosion');
-  };
+  }, [barExploded, barPosition, discoverSecret]);
 
-  // Add global mouse/touch move and up listeners when grabbing
+  // Add global mouse/touch move and up listeners
   useEffect(() => {
-    const handleGlobalMove = (e) => handleBarMove(e);
-    const handleGlobalUp = () => handleBarRelease();
+    const handleGlobalMove = (e) => {
+      if (shakeDataRef.current.isGrabbing) {
+        handleBarMove(e);
+      }
+    };
     
-    if (shakeDataRef.current.isGrabbing) {
-      document.addEventListener('mousemove', handleGlobalMove);
-      document.addEventListener('mouseup', handleGlobalUp);
-      document.addEventListener('touchmove', handleGlobalMove, { passive: false });
-      document.addEventListener('touchend', handleGlobalUp);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleGlobalMove);
-        document.removeEventListener('mouseup', handleGlobalUp);
-        document.removeEventListener('touchmove', handleGlobalMove);
-        document.removeEventListener('touchend', handleGlobalUp);
-      };
-    }
-  }, [barExploded]);
+    const handleGlobalUp = () => {
+      if (shakeDataRef.current.isGrabbing) {
+        handleBarRelease();
+      }
+    };
+    
+    document.addEventListener('mousemove', handleGlobalMove);
+    document.addEventListener('mouseup', handleGlobalUp);
+    document.addEventListener('touchmove', handleGlobalMove, { passive: false });
+    document.addEventListener('touchend', handleGlobalUp);
+    document.addEventListener('touchcancel', handleGlobalUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMove);
+      document.removeEventListener('mouseup', handleGlobalUp);
+      document.removeEventListener('touchmove', handleGlobalMove);
+      document.removeEventListener('touchend', handleGlobalUp);
+      document.removeEventListener('touchcancel', handleGlobalUp);
+    };
+  }, [handleBarMove, handleBarRelease]);
 
   const handleLogin = () => {
     window.location.href = `${API_URL}/auth/login`;
