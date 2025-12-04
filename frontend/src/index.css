@@ -254,8 +254,8 @@ body::before {
   background: var(--bg-card);
   border: 2px solid var(--accent);
   border-radius: 12px;
-  cursor: grab;
-  transition: background 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   user-select: none;
   -webkit-user-select: none;
@@ -264,7 +264,6 @@ body::before {
 
 .secret-counter-main:hover:not(.dragging) {
   background: var(--bg-secondary);
-  transform: scale(1.02);
   box-shadow: 0 0 20px var(--accent-glow);
 }
 

@@ -104,6 +104,7 @@ function App() {
   const [barPosition, setBarPosition] = useState(null); // { x, y } when dragging
   const shakeDataRef = useRef({ startX: 0, startY: 0, movements: [], isGrabbing: false });
   const barShakeTimerRef = useRef(null);
+  const barHoldTimerRef = useRef(null);
   const barRef = useRef(null);
 
   // Ranking game easter egg
@@ -852,17 +853,7 @@ function App() {
     discoverSecret('bar_explosion');
   }, [barExploded, barPosition, discoverSecret]);
 
-  const handleBarGrab = useCallback((e) => {
-    if (barExploded || !barRef.current) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    // Get the bar's current position
-    const rect = barRef.current.getBoundingClientRect();
+  const startDragging = useCallback((clientX, clientY, rect) => {
     const offsetX = clientX - rect.left;
     const offsetY = clientY - rect.top;
     
@@ -875,6 +866,7 @@ function App() {
       offsetY,
       movements: [],
       isGrabbing: true,
+      isDragging: true,
       lastTime: Date.now()
     };
     
@@ -885,10 +877,38 @@ function App() {
     });
     
     setIsShakingBar(false);
-  }, [barExploded]);
+  }, []);
+
+  const handleBarGrab = useCallback((e) => {
+    if (barExploded || !barRef.current) return;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    // Get the bar's current position
+    const rect = barRef.current.getBoundingClientRect();
+    
+    // Mark as potentially grabbing (but not dragging yet)
+    shakeDataRef.current = {
+      startX: clientX,
+      startY: clientY,
+      isGrabbing: true,
+      isDragging: false,
+      movements: [],
+      lastTime: Date.now()
+    };
+    
+    // Set a timer - if held for 200ms, start dragging
+    barHoldTimerRef.current = setTimeout(() => {
+      if (shakeDataRef.current.isGrabbing) {
+        startDragging(clientX, clientY, rect);
+      }
+    }, 200);
+  }, [barExploded, startDragging]);
 
   const handleBarMove = useCallback((e) => {
-    if (!shakeDataRef.current.isGrabbing || barExploded) return;
+    // Only process movement if we're actually dragging (not just holding)
+    if (!shakeDataRef.current.isGrabbing || !shakeDataRef.current.isDragging || barExploded) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -935,16 +955,28 @@ function App() {
   }, [barExploded, triggerBarExplosion]);
 
   const handleBarRelease = useCallback(() => {
-    shakeDataRef.current.isGrabbing = false;
+    const wasDragging = shakeDataRef.current.isDragging;
     
-    // Reset position and shake visual after a delay
-    if (barShakeTimerRef.current) {
-      clearTimeout(barShakeTimerRef.current);
+    // Cancel the hold timer if it hasn't fired yet
+    if (barHoldTimerRef.current) {
+      clearTimeout(barHoldTimerRef.current);
+      barHoldTimerRef.current = null;
     }
-    barShakeTimerRef.current = setTimeout(() => {
-      setIsShakingBar(false);
-      setBarPosition(null); // Return to original position
-    }, 200);
+    
+    shakeDataRef.current.isGrabbing = false;
+    shakeDataRef.current.isDragging = false;
+    
+    // Only animate back if we were actually dragging
+    if (wasDragging) {
+      // Reset position and shake visual after a delay
+      if (barShakeTimerRef.current) {
+        clearTimeout(barShakeTimerRef.current);
+      }
+      barShakeTimerRef.current = setTimeout(() => {
+        setIsShakingBar(false);
+        setBarPosition(null); // Return to original position
+      }, 200);
+    }
   }, []);
 
   // Add global mouse/touch move and up listeners
@@ -1277,11 +1309,16 @@ function App() {
                 <div 
                   ref={barRef}
                   className={`secret-counter-main ${isShakingBar ? 'shaking' : ''} ${barExploded ? 'exploded' : ''} ${barPosition ? 'dragging' : ''}`}
-                  onClick={() => !isShakingBar && !barPosition && setSecretDropdownOpen(!secretDropdownOpen)}
+                  onClick={(e) => {
+                    // Only toggle dropdown if it wasn't a drag
+                    if (!barPosition && !isShakingBar) {
+                      setSecretDropdownOpen(!secretDropdownOpen);
+                    }
+                  }}
                   onMouseDown={handleBarGrab}
                   onTouchStart={handleBarGrab}
                   style={{ 
-                    cursor: barExploded ? 'not-allowed' : (shakeDataRef.current.isGrabbing ? 'grabbing' : 'grab'),
+                    cursor: barExploded ? 'not-allowed' : (barPosition ? 'grabbing' : 'pointer'),
                     ...(barPosition ? {
                       position: 'fixed',
                       left: `${barPosition.x}px`,
