@@ -494,8 +494,7 @@ ALL_SECRETS = [
     'monkey_cursor',   # Triggered monkey cursor punishment
     'counter',         # Finding the secret counter
     'theme_kabouter',  # Unlocking Kabouter theme
-    'bar_explosion',   # Shaking the progress bar until it explodes
-    'hollow_knight'    # Playing Hollow Knight game
+    'bar_explosion'    # Shaking the progress bar until it explodes
 ]
 
 @app.route('/api/secret/discover', methods=['POST'])
