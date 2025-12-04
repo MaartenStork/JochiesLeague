@@ -545,10 +545,17 @@ function App() {
       
       setCheatMessage(`🎨 ${themes[themeId].name} theme unlocked!`);
       
+      // Save to database based on theme
+      if (themeId === 'kabouter') {
+        discoverSecret('theme_kabouter');
+      } else if (themeId === 'chess') {
+        discoverSecret('chess_victory');
+      }
+      
       return true;
     }
     return false;
-  }, [unlockedThemes, themes]);
+  }, [unlockedThemes, themes, discoverSecret]);
 
   // Switch theme
   const switchTheme = useCallback((themeId) => {
@@ -615,7 +622,6 @@ function App() {
       case 'kabout borrel':
       case 'kabout':
         unlockTheme('kabouter');
-        discoverSecret('theme_kabouter');
         success = true;
         break;
       // Smiling Friends characters
@@ -864,8 +870,7 @@ function App() {
                 origin: { y: 0.5 },
                 colors: unlocked ? ['#d4af37', '#b8941f', '#ffd700'] : ['#00ff88', '#ffd700', '#ff4466']
               });
-              discoverSecret('chess_victory');
-              alert('♔ Fakka Job ♔');
+              alert('♔ Fakka Jobje ♔');
             }, 100);
             return;
           } else if (chess.isDraw()) {
