@@ -633,22 +633,33 @@ function App() {
     
     const showNextWord = () => {
       if (currentIndex >= words.length) {
-        // Sequence complete - stay on last word and play applause
-        setTimeout(() => {
-          if (sachaAudioRef.current) {
-            sachaAudioRef.current.play();
-          }
-        }, 200);
-        
-        // Hide after applause finishes (clapping.mp3 is about 3 seconds)
-        setTimeout(() => {
-          setShowSachaWord(false);
-        }, 3200);
         return;
       }
       
       setSachaWord(words[currentIndex]);
       setShowSachaWord(true);
+      
+      // Check if this is the last word
+      if (currentIndex === words.length - 1) {
+        // Last word! Play applause immediately and trigger confetti
+        if (sachaAudioRef.current) {
+          sachaAudioRef.current.play();
+        }
+        
+        // Confetti celebration!
+        confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.5 },
+          colors: ['#ffd700', '#ffed4e', '#fff', '#ff6b35', '#4ecdc4']
+        });
+        
+        // Hide after applause finishes (clapping.mp3 is about 3 seconds)
+        setTimeout(() => {
+          setShowSachaWord(false);
+        }, 3000);
+        return;
+      }
       
       const delay = delays[currentIndex];
       currentIndex++;
