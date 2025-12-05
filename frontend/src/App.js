@@ -2006,8 +2006,8 @@ function App() {
               <button className="hollow-knight-close" onClick={() => setShowIwbtc(false)}>✕</button>
             </div>
             <iframe
-              src="/iwbtc/index.html"
-              title="I Wanna Be The Cat"
+              src="https://copy.sh/iw/"
+              title="Tweaker Nation"
               className="hollow-knight-iframe"
               allow="autoplay; fullscreen"
             />
