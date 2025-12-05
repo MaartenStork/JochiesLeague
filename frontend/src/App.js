@@ -2369,6 +2369,20 @@ function App() {
       <audio ref={sachaAudioRef} preload="auto">
         <source src="/clapping.mp3" type="audio/mpeg" />
       </audio>
+
+      {/* Shooting stars for legendary theme */}
+      {currentTheme === 'legendary' && (
+        <div className="shooting-stars">
+          <div className="shooting-star" style={{ top: '10%', left: '20%', '--delay': '0s', '--duration': '8s' }} />
+          <div className="shooting-star" style={{ top: '25%', left: '70%', '--delay': '3s', '--duration': '10s' }} />
+          <div className="shooting-star" style={{ top: '5%', left: '50%', '--delay': '6s', '--duration': '9s' }} />
+          <div className="shooting-star" style={{ top: '35%', left: '10%', '--delay': '9s', '--duration': '11s' }} />
+          <div className="shooting-star" style={{ top: '15%', left: '85%', '--delay': '12s', '--duration': '8s' }} />
+          <div className="shooting-star" style={{ top: '40%', left: '40%', '--delay': '15s', '--duration': '10s' }} />
+          <div className="shooting-star" style={{ top: '8%', left: '60%', '--delay': '18s', '--duration': '9s' }} />
+          <div className="shooting-star" style={{ top: '30%', left: '25%', '--delay': '21s', '--duration': '12s' }} />
+        </div>
+      )}
     </div>
   );
 }
