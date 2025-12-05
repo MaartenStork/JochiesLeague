@@ -126,6 +126,25 @@ function App() {
   const [showSimo, setShowSimo] = useState(false);
   const simoImageRef = useRef(null);
 
+  // Sacha random word easter egg
+  const [showSachaWord, setShowSachaWord] = useState(false);
+  const [sachaWord, setSachaWord] = useState('');
+  const sachaWords = [
+    'Snoehscker',
+    'Shmaloogle',
+    'shbingbing',
+    'schooba',
+    'sshcooby',
+    'schnabsta',
+    'schbamba',
+    'shaloomba',
+    'shagroomka',
+    'schalababa',
+    'schalambino',
+    'shbimbi',
+    'schoema'
+  ];
+
   // Theme system
   const [currentTheme, setCurrentTheme] = useState('default');
   const [unlockedThemes, setUnlockedThemes] = useState(['default']);
@@ -766,6 +785,15 @@ function App() {
         // Animation: creep up slowly (2s) to 60%, hold briefly (0.3s), then zip down VERY fast (0.2s)
         // Total duration: 2.5s
         setTimeout(() => setShowSimo(false), 2500);
+        break;
+      case 'sacha':
+        // Pick random word from the list
+        const randomWord = sachaWords[Math.floor(Math.random() * sachaWords.length)];
+        setSachaWord(randomWord);
+        setShowSachaWord(true);
+        discoverSecret('sacha');
+        // Show for 2 seconds then fade out
+        setTimeout(() => setShowSachaWord(false), 2000);
         break;
       case 'counter':
       case 'progress':
@@ -2168,6 +2196,14 @@ function App() {
             alt="SIMO"
             className="simo-peek-img"
           />
+        </div>
+      )}
+
+      {/* Sacha Random Word Easter Egg */}
+      {showSachaWord && (
+        <div className="sacha-word-overlay">
+          <div className="sacha-spotlight"></div>
+          <div className="sacha-word">{sachaWord}</div>
         </div>
       )}
     </div>
