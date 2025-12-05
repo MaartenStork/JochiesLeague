@@ -122,6 +122,10 @@ function App() {
   const correctRanking = {1: 'Ian', 2: 'Tobias', 3: 'Derk', 4: 'Guru', 5: 'Job', 6: 'Niels'};
   const rankingNames = ['Derk', 'Maarten', 'Tobias', 'Maas', 'Job', 'Daan', 'Guru', 'Niels', 'Simo', 'Julian', 'Manka', 'Tibi', 'Ian'];
 
+  // SIMO peek easter egg
+  const [showSimo, setShowSimo] = useState(false);
+  const simoImageRef = useRef(null);
+
   // Theme system
   const [currentTheme, setCurrentTheme] = useState('default');
   const [unlockedThemes, setUnlockedThemes] = useState(['default']);
@@ -165,6 +169,12 @@ function App() {
       // Clean the URL without reloading
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+  }, []);
+
+  // Preload SIMO image for smooth animation
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/SIMO.jpg';
   }, []);
 
   // Load saved theme from localStorage (unlocked themes come from secrets)
@@ -749,6 +759,13 @@ function App() {
           setShowGlep(false);
           setSfGroupActive(false);
         }, 5000);
+        break;
+      case 'simo':
+        setShowSimo(true);
+        discoverSecret('simo_peek');
+        // Animation: creep up slowly (2s) to 60%, hold briefly (0.5s), then zip down fast (0.3s)
+        // Total duration: 2.8s, then hide after 3s to allow animation to complete
+        setTimeout(() => setShowSimo(false), 3000);
         break;
       case 'counter':
       case 'progress':
@@ -2139,6 +2156,18 @@ function App() {
             </div>
             <button className="chess-reset" onClick={resetChessGame}>New Game</button>
           </div>
+        </div>
+      )}
+
+      {/* SIMO Peek Easter Egg */}
+      {showSimo && (
+        <div className="simo-peek-overlay">
+          <img 
+            ref={simoImageRef}
+            src="/SIMO.jpg"
+            alt="SIMO"
+            className="simo-peek-img"
+          />
         </div>
       )}
     </div>

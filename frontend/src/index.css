@@ -2593,3 +2593,47 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
   }
 }
+
+/* SIMO Peek Easter Egg */
+.simo-peek-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.simo-peek-img {
+  width: 300px;
+  height: auto;
+  object-fit: contain;
+  transform: translateY(100%);
+  animation: simoPeek 3s ease-in-out forwards;
+  filter: drop-shadow(0 -10px 40px rgba(0, 0, 0, 0.8));
+}
+
+@keyframes simoPeek {
+  0% {
+    transform: translateY(100%);
+  }
+  66% {
+    transform: translateY(-60%);
+  }
+  76% {
+    transform: translateY(-60%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .simo-peek-img {
+    width: 200px;
+  }
+}
