@@ -126,15 +126,15 @@ function App() {
   const [showSimo, setShowSimo] = useState(false);
   const simoImageRef = useRef(null);
 
-  // Sacha random word easter egg
+  // Sacha word sequence easter egg
   const [showSachaWord, setShowSachaWord] = useState(false);
   const [sachaWord, setSachaWord] = useState('');
-  const sachaWords = [
+  const sachaWordsRef = useRef([
     'Snoehscker',
-    'Shmaloogle',
     'shbingbing',
     'schooba',
     'sshcooby',
+    'simo',
     'schnabsta',
     'schbamba',
     'shaloomba',
@@ -142,8 +142,18 @@ function App() {
     'schalababa',
     'schalambino',
     'shbimbi',
-    'schoema'
-  ];
+    'schoema',
+    'shcobooba',
+    'schalabama',
+    'shakra',
+    'showroom',
+    'schadowrealm',
+    'sacherino',
+    'shaloom',
+    'shmaloogle'
+  ]);
+  const sachaSequenceRef = useRef(null);
+  const sachaAudioRef = useRef(null);
 
   // Theme system
   const [currentTheme, setCurrentTheme] = useState('default');
@@ -188,12 +198,6 @@ function App() {
       // Clean the URL without reloading
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
-
-  // Preload SIMO image for smooth animation
-  useEffect(() => {
-    const img = new Image();
-    img.src = '/SIMO.jpg';
   }, []);
 
   // Load saved theme from localStorage (unlocked themes come from secrets)
@@ -608,6 +612,63 @@ function App() {
     }
   }, [unlockedThemes, themes]);
 
+  // Sacha word sequence function
+  const startSachaSequence = useCallback(() => {
+    // Clear any existing sequence
+    if (sachaSequenceRef.current) {
+      clearTimeout(sachaSequenceRef.current);
+    }
+    
+    const words = sachaWordsRef.current;
+    let currentIndex = 0;
+    
+    // Calculate delays - start slow, ramp up VERY fast to a blur
+    const delays = words.map((_, i) => {
+      if (i < 3) return 500;  // First 3: slow start (500ms each)
+      if (i < 6) return 250;  // Next 3: medium (250ms each)
+      if (i < 10) return 150; // Next 4: faster (150ms each)
+      if (i < 15) return 80;  // Next 5: very fast (80ms each)
+      return 40;              // Last 6: SUPER FAST blur (40ms each) - barely readable!
+    });
+    
+    const showNextWord = () => {
+      if (currentIndex >= words.length) {
+        // Sequence complete - stay on last word and play applause
+        setTimeout(() => {
+          if (sachaAudioRef.current) {
+            sachaAudioRef.current.play();
+          }
+        }, 200);
+        
+        // Hide after applause finishes (clapping.mp3 is about 3 seconds)
+        setTimeout(() => {
+          setShowSachaWord(false);
+        }, 3200);
+        return;
+      }
+      
+      setSachaWord(words[currentIndex]);
+      setShowSachaWord(true);
+      
+      const delay = delays[currentIndex];
+      currentIndex++;
+      
+      sachaSequenceRef.current = setTimeout(showNextWord, delay);
+    };
+    
+    // Start the sequence
+    showNextWord();
+  }, []);
+
+  // Cleanup sequence on unmount
+  useEffect(() => {
+    return () => {
+      if (sachaSequenceRef.current) {
+        clearTimeout(sachaSequenceRef.current);
+      }
+    };
+  }, []);
+
   // Cheat code handler
   const handleCheatSubmit = (e) => {
     e.preventDefault();
@@ -787,13 +848,9 @@ function App() {
         setTimeout(() => setShowSimo(false), 2500);
         break;
       case 'sacha':
-        // Pick random word from the list
-        const randomWord = sachaWords[Math.floor(Math.random() * sachaWords.length)];
-        setSachaWord(randomWord);
-        setShowSachaWord(true);
+        // Start the word sequence
+        startSachaSequence();
         discoverSecret('sacha');
-        // Show for 2 seconds then fade out
-        setTimeout(() => setShowSachaWord(false), 2000);
         break;
       case 'counter':
       case 'progress':
@@ -2199,13 +2256,16 @@ function App() {
         </div>
       )}
 
-      {/* Sacha Random Word Easter Egg */}
+      {/* Sacha Word Sequence Easter Egg */}
       {showSachaWord && (
         <div className="sacha-word-overlay">
           <div className="sacha-spotlight"></div>
           <div className="sacha-word">{sachaWord}</div>
         </div>
       )}
+      
+      {/* Hidden audio for applause */}
+      <audio ref={sachaAudioRef} src="/clapping.mp3" preload="auto" />
     </div>
   );
 }
