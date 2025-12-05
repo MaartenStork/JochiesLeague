@@ -97,6 +97,9 @@ function App() {
   // Hollow Knight game popup
   const [showHollowKnight, setShowHollowKnight] = useState(false);
 
+  // IWBTC game popup (Tweak game)
+  const [showIwbtc, setShowIwbtc] = useState(false);
+
   // Secret tracking
   const [secretProgress, setSecretProgress] = useState(null);
   const [secretDropdownOpen, setSecretDropdownOpen] = useState(false);
@@ -711,6 +714,12 @@ function App() {
       case 'silk song':
         setShowHollowKnight(true);
         discoverSecret('hollow_knight');
+        break;
+      case 'tweak':
+      case 'tweaker':
+      case 'tweaking':
+        setShowIwbtc(true);
+        discoverSecret('tweak_game');
         break;
       case 'smiling friends':
       case 'smilingfriends':
@@ -1981,6 +1990,24 @@ function App() {
             <iframe
               src="/hollowknight/game.html"
               title="Hollow Knight Game"
+              className="hollow-knight-iframe"
+              allow="autoplay; fullscreen"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* IWBTC Game Popup (Tweak Game) */}
+      {showIwbtc && (
+        <div className="hollow-knight-overlay" onClick={() => setShowIwbtc(false)}>
+          <div className="hollow-knight-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="hollow-knight-header">
+              <h2>🎮 I Wanna Be The Cat</h2>
+              <button className="hollow-knight-close" onClick={() => setShowIwbtc(false)}>✕</button>
+            </div>
+            <iframe
+              src="/iwbtc/index.html"
+              title="I Wanna Be The Cat"
               className="hollow-knight-iframe"
               allow="autoplay; fullscreen"
             />

@@ -495,7 +495,8 @@ ALL_SECRETS = [
     'counter',         # Finding the secret counter
     'theme_kabouter',  # Unlocking Kabouter theme
     'bar_explosion',   # Shaking the progress bar until it explodes
-    'hollow_knight'    # Playing Hollow Knight game
+    'hollow_knight',   # Playing Hollow Knight game
+    'tweak_game'       # Playing IWBTC (tweak game)
 ]
 
 @app.route('/api/secret/discover', methods=['POST'])
