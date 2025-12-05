@@ -2646,7 +2646,7 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
   right: 0;
   bottom: 0;
   z-index: 10000;
-  background: #000;
+  background: #0a0a0a; /* Very dark gray instead of pure black - "lights off" feeling */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2666,10 +2666,11 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
     ellipse at center,
     transparent 0%,
     transparent 30%,
-    rgba(0, 0, 0, 0.4) 60%,
-    rgba(0, 0, 0, 0.8) 100%
+    rgba(0, 0, 0, 0.3) 60%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   pointer-events: none;
+  z-index: 1; /* Below confetti */
 }
 
 @keyframes sachaFadeIn {
@@ -2683,7 +2684,7 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
 
 .sacha-spotlight {
   position: relative;
-  z-index: 1;
+  z-index: 2; /* Above vignette, below confetti */
   /* No padding or background - just the text in the spotlight */
 }
 
@@ -2707,7 +2708,7 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
   );
   animation: spotlightPulse 0.6s ease-in-out infinite alternate;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0; /* Behind the text */
 }
 
 /* Spotlight beam coming from above */
@@ -2729,7 +2730,7 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
   opacity: 0.5;
   animation: spotlightBeam 0.6s ease-in-out infinite alternate;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0; /* Behind the text */
 }
 
 @keyframes spotlightPulse {
@@ -2753,6 +2754,8 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
 }
 
 .sacha-name {
+  position: relative;
+  z-index: 3; /* Above spotlight, below confetti (10001) */
   font-size: 4.5rem;
   font-weight: 900;
   color: #fff;
@@ -2768,6 +2771,7 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
   animation: nameAppear 0.2s ease-out;
   white-space: nowrap;
   filter: brightness(1.2);
+  pointer-events: none; /* Don't block confetti */
 }
 
 @keyframes nameAppear {

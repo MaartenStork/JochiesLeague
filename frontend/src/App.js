@@ -1260,7 +1260,8 @@ function App() {
             particleCount: 200,
             spread: 100,
             origin: { y: 0.5 },
-            colors: ['#ffffff', '#ffd700', '#00ff88', '#ff4466']
+            colors: ['#ffffff', '#ffd700', '#00ff88', '#ff4466'],
+            zIndex: 10001 // Higher than the overlay (10000)
           });
           
           // Audio is already playing from previous step
