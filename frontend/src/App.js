@@ -763,9 +763,9 @@ function App() {
       case 'simo':
         setShowSimo(true);
         discoverSecret('simo_peek');
-        // Animation: creep up slowly (2s) to 60%, hold briefly (0.5s), then zip down fast (0.3s)
-        // Total duration: 2.8s, then hide after 3s to allow animation to complete
-        setTimeout(() => setShowSimo(false), 3000);
+        // Animation: creep up slowly (2s) to 60%, hold briefly (0.3s), then zip down VERY fast (0.2s)
+        // Total duration: 2.5s
+        setTimeout(() => setShowSimo(false), 2500);
         break;
       case 'counter':
       case 'progress':

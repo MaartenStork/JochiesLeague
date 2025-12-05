@@ -496,7 +496,8 @@ ALL_SECRETS = [
     'theme_kabouter',  # Unlocking Kabouter theme
     'bar_explosion',   # Shaking the progress bar until it explodes
     'hollow_knight',   # Playing Hollow Knight game
-    'tweak_game'       # Playing IWBTC (tweak game)
+    'tweak_game',      # Playing IWBTC (tweak game)
+    'simo_peek'        # SIMO peeking up from bottom
 ]
 
 @app.route('/api/secret/discover', methods=['POST'])
