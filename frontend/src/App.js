@@ -135,6 +135,13 @@ function App() {
   const [isFinalSachaName, setIsFinalSachaName] = useState(false);
   const sachaAudioRef = useRef(null);
 
+  // Fortnite/Nickeh30 easter egg
+  const [showNickeh, setShowNickeh] = useState(false);
+  const [nickehSpeed, setNickehSpeed] = useState(1);
+  const [nickehIntensity, setNickehIntensity] = useState(0);
+  const nickehVideoRef = useRef(null);
+  const nickehIntervalRef = useRef(null);
+
   // Theme system
   const [currentTheme, setCurrentTheme] = useState('default');
   const [unlockedThemes, setUnlockedThemes] = useState(['default']);
@@ -199,6 +206,38 @@ function App() {
   useEffect(() => {
     const audio = new Audio('/clapping.mp3');
     sachaAudioRef.current = audio;
+  }, []);
+
+  // Nickeh30 video speed controller
+  const triggerNickeh = useCallback(() => {
+    setShowNickeh(true);
+    setNickehSpeed(1);
+    setNickehIntensity(0);
+    
+    // Speed up every time video loops
+    let currentSpeed = 1;
+    let intensity = 0;
+    
+    nickehIntervalRef.current = setInterval(() => {
+      currentSpeed = Math.min(currentSpeed * 1.15, 16); // Cap at 16x speed
+      intensity = Math.min(intensity + 1, 10);
+      setNickehSpeed(currentSpeed);
+      setNickehIntensity(intensity);
+      
+      if (nickehVideoRef.current) {
+        nickehVideoRef.current.playbackRate = currentSpeed;
+      }
+    }, 1500); // Speed up every 1.5 seconds
+  }, []);
+
+  const stopNickeh = useCallback(() => {
+    setShowNickeh(false);
+    setNickehSpeed(1);
+    setNickehIntensity(0);
+    if (nickehIntervalRef.current) {
+      clearInterval(nickehIntervalRef.current);
+      nickehIntervalRef.current = null;
+    }
   }, []);
 
   // Load saved theme from localStorage (unlocked themes come from secrets)
@@ -846,6 +885,12 @@ function App() {
         // Start the Sacha names animation sequence
         triggerSachaNames();
         discoverSecret('sacha_names');
+        break;
+      case 'fortnite':
+      case 'nickeh30':
+      case 'nickeh':
+        triggerNickeh();
+        discoverSecret('fortnite');
         break;
       case 'counter':
       case 'progress':
@@ -2369,6 +2414,28 @@ function App() {
       <audio ref={sachaAudioRef} preload="auto">
         <source src="/clapping.mp3" type="audio/mpeg" />
       </audio>
+
+      {/* Nickeh30 Fortnite Easter Egg */}
+      {showNickeh && (
+        <div 
+          className={`nickeh-overlay intensity-${nickehIntensity}`}
+          onClick={stopNickeh}
+        >
+          <video
+            ref={nickehVideoRef}
+            className="nickeh-video"
+            autoPlay
+            loop
+            playsInline
+          >
+            <source src="/nickeh30.mp4" type="video/mp4" />
+          </video>
+          <div className="nickeh-speed-indicator">
+            {nickehSpeed.toFixed(1)}x
+          </div>
+          <div className="nickeh-hint">Click to stop</div>
+        </div>
+      )}
 
       {/* Shooting stars for legendary theme */}
       {currentTheme === 'legendary' && (

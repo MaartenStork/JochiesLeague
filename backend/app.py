@@ -499,6 +499,7 @@ ALL_SECRETS = [
     'tweak_game',      # Playing IWBTC (tweak game)
     'simo_peek',       # SIMO peeking up from bottom
     'sacha_names',     # Sacha names ramping sequence with applause
+    'fortnite',        # Nickeh30 fortnite video easter egg
     'legendary_theme'  # Unlocking legendary theme (100% completion)
 ]
 
