@@ -202,6 +202,14 @@ function App() {
     img.src = '/SIMO.jpg';
   }, []);
 
+  // Preload Nickeh30 video for smooth playback
+  useEffect(() => {
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.src = '/nickeh30.mp4';
+    video.load();
+  }, []);
+
   // Preload Sacha applause audio
   useEffect(() => {
     const audio = new Audio('/clapping.mp3');
