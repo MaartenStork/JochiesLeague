@@ -132,6 +132,7 @@ function App() {
   // Sacha names easter egg
   const [showSachaNames, setShowSachaNames] = useState(false);
   const [currentSachaName, setCurrentSachaName] = useState('');
+  const [isFinalSachaName, setIsFinalSachaName] = useState(false);
   const sachaAudioRef = useRef(null);
 
   // Theme system
@@ -167,7 +168,7 @@ function App() {
       background: null
     },
     legendary: {
-      name: '✨ LEGENDARY ✨',
+      name: '100% Completion',
       colors: {
         accent: '#ffd700',
         accentDim: '#ffaa00',
@@ -1318,7 +1319,10 @@ function App() {
         setCurrentSachaName(sachaNames[currentIndex]);
         
         if (currentIndex === sachaNames.length - 1) {
-          // Last name - CONFETTI! Play audio and hold longer
+          // Last name - make it SPECIAL!
+          setIsFinalSachaName(true);
+          
+          // CONFETTI! Play audio and hold longer
           confetti({
             particleCount: 200,
             spread: 100,
@@ -1333,6 +1337,7 @@ function App() {
           setTimeout(() => {
             setShowSachaNames(false);
             setCurrentSachaName('');
+            setIsFinalSachaName(false);
           }, 2500);
         } else {
           // Schedule next name
@@ -2355,7 +2360,7 @@ function App() {
       {showSachaNames && (
         <div className="sacha-names-overlay">
           <div className="sacha-spotlight">
-            <div className="sacha-name">{currentSachaName}</div>
+            <div className={`sacha-name ${isFinalSachaName ? 'sacha-name-final' : ''}`}>{currentSachaName}</div>
           </div>
         </div>
       )}
