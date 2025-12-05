@@ -725,7 +725,7 @@ function App() {
           setShowDerkFlash(true);
           setTimeout(() => {
             setShowDerkFlash(false);
-          }, 500); // Show flash for 500ms
+          }, 1000); // Show flash for 1 second
         }, 100); // Small delay before flash
         discoverSecret('tweak_game');
         break;
