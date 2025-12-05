@@ -2621,10 +2621,10 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
     transform: translateY(100%);
   }
   66% {
-    transform: translateY(-60%);
+    transform: translateY(40%);
   }
   76% {
-    transform: translateY(-60%);
+    transform: translateY(40%);
   }
   100% {
     transform: translateY(100%);
