@@ -129,6 +129,244 @@ body.theme-chess::before {
   }
 }
 
+/* ============ LEGENDARY THEME (100% Completion) ============ */
+
+/* Legendary theme - Golden sparkles everywhere! */
+body.theme-legendary {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated golden shimmer overlay */
+body.theme-legendary::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 170, 0, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.04) 0%, transparent 70%);
+  z-index: -2;
+  animation: legendaryShimmer 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes legendaryShimmer {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* Sparkle particles floating around */
+body.theme-legendary::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 215, 0, 0.8) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 170, 0, 0.7) 1px, transparent 1px);
+  background-size: 
+    200px 200px,
+    250px 250px,
+    300px 300px;
+  background-position:
+    0 0,
+    50px 50px,
+    100px 100px;
+  animation: sparkleFloat 20s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+@keyframes sparkleFloat {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  100% {
+    transform: translateY(-100vh) translateX(50px);
+  }
+}
+
+/* Add sparkle effects to buttons in legendary theme */
+body.theme-legendary .checkin-btn,
+body.theme-legendary button {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-legendary .checkin-btn::before,
+body.theme-legendary button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  animation: buttonShine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes buttonShine {
+  0%, 100% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  50% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+/* Gold glow on cards */
+body.theme-legendary .feed-card,
+body.theme-legendary .ranking-entry {
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: cardGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes cardGlow {
+  0% {
+    box-shadow: 
+      0 0 15px rgba(255, 215, 0, 0.15),
+      0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    box-shadow: 
+      0 0 30px rgba(255, 215, 0, 0.3),
+      0 4px 25px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Legendary logo sparkle effect */
+body.theme-legendary .logo {
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.8),
+    0 0 20px rgba(255, 215, 0, 0.6),
+    0 0 30px rgba(255, 215, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: logoSparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes logoSparkle {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+}
+
+/* Add mini sparkles that appear randomly */
+body.theme-legendary .feed-card::after,
+body.theme-legendary .ranking-entry::after {
+  content: '✨';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1rem;
+  opacity: 0;
+  animation: sparkleAppear 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkleAppear {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+/* Profile icon gold border pulse */
+body.theme-legendary .profile-icon {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  animation: profileGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes profileGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  }
+}
+
+/* Special progress bar effects for legendary theme */
+body.theme-legendary .secret-progress-bar {
+  background: linear-gradient(90deg, 
+    rgba(255, 215, 0, 0.2),
+    rgba(255, 170, 0, 0.2)
+  );
+  box-shadow: 
+    inset 0 0 10px rgba(255, 215, 0, 0.3),
+    0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+body.theme-legendary .secret-progress-fill {
+  background: linear-gradient(90deg, 
+    #ffd700,
+    #ffaa00,
+    #ffd700
+  );
+  background-size: 200% 100%;
+  animation: goldShimmer 2s linear infinite;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+@keyframes goldShimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+/* Sparkle on the progress bar */
+body.theme-legendary .secret-counter-main::after {
+  content: '✨';
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  animation: sparkleRotate 3s linear infinite;
+}
+
+@keyframes sparkleRotate {
+  0%, 100% {
+    transform: translateY(-50%) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50%) rotate(180deg) scale(1.3);
+    opacity: 0.7;
+  }
+}
+
 /* Golden gradient overlay for chess theme */
 body.theme-chess::after {
   content: '';

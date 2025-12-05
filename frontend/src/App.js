@@ -162,6 +162,15 @@ function App() {
         accentGlow: 'rgba(212, 175, 55, 0.3)'
       },
       background: null
+    },
+    legendary: {
+      name: '✨ LEGENDARY ✨',
+      colors: {
+        accent: '#ffd700',
+        accentDim: '#ffaa00',
+        accentGlow: 'rgba(255, 215, 0, 0.5)'
+      },
+      background: null
     }
   };
 
@@ -217,6 +226,8 @@ function App() {
         document.body.className = 'theme-kabouter';
       } else if (currentTheme === 'chess') {
         document.body.className = 'theme-chess';
+      } else if (currentTheme === 'legendary') {
+        document.body.className = 'theme-legendary';
       } else {
         document.body.className = '';
       }
@@ -269,14 +280,27 @@ function App() {
           newUnlockedThemes.push('chess');
         }
         
+        // Check for legendary theme (100% completion!)
+        const justReached100 = data.percentage === 100 && !newUnlockedThemes.includes('legendary');
+        if (data.percentage === 100) {
+          newUnlockedThemes.push('legendary');
+        }
+        
         // Update unlocked themes
         setUnlockedThemes(newUnlockedThemes);
         localStorage.setItem('unlockedThemes', JSON.stringify(newUnlockedThemes));
+        
+        // Celebrate reaching 100% for the first time!
+        if (justReached100) {
+          setTimeout(() => {
+            unlockTheme('legendary');
+          }, 500);
+        }
       }
     } catch (err) {
       console.error('Error fetching secret progress:', err);
     }
-  }, [user]);
+  }, [user, unlockTheme]);
 
   // Track secret discovery with immediate UI update
   const discoverSecret = useCallback(async (secretCode) => {
@@ -562,6 +586,8 @@ function App() {
       discoverSecret('theme_kabouter');
     } else if (themeId === 'chess') {
       discoverSecret('chess_victory');
+    } else if (themeId === 'legendary') {
+      discoverSecret('legendary_theme');
     }
     
     // Only show visual effects and update state if newly unlocked
@@ -575,12 +601,38 @@ function App() {
       localStorage.setItem('currentTheme', themeId);
       
       // Show themed confetti!
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.3 },
-        colors: [themes[themeId].colors.accent, themes[themeId].colors.accentDim, '#ffd700']
-      });
+      const confettiColors = themeId === 'legendary' 
+        ? ['#ffd700', '#ffaa00', '#ffffff', '#ffdd00']
+        : [themes[themeId].colors.accent, themes[themeId].colors.accentDim, '#ffd700'];
+      
+      // Extra epic confetti for legendary!
+      if (themeId === 'legendary') {
+        const duration = 3000;
+        const animationEnd = Date.now() + duration;
+        
+        const interval = setInterval(() => {
+          const timeLeft = animationEnd - Date.now();
+          if (timeLeft <= 0) {
+            clearInterval(interval);
+            return;
+          }
+          
+          confetti({
+            particleCount: 50,
+            startVelocity: 30,
+            spread: 360,
+            origin: { x: Math.random(), y: Math.random() - 0.2 },
+            colors: confettiColors
+          });
+        }, 100);
+      } else {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.3 },
+          colors: confettiColors
+        });
+      }
       
       setCheatMessage(`🎨 ${themes[themeId].name} theme unlocked!`);
       
@@ -1664,7 +1716,7 @@ function App() {
                     <div className="secret-dropdown">
                       <div className="secret-list">
                         {secretProgress.found_secrets
-                          .filter(secret => secret !== 'chess_victory' && secret !== 'theme_kabouter')
+                          .filter(secret => secret !== 'chess_victory' && secret !== 'theme_kabouter' && secret !== 'legendary_theme')
                           .map(secret => (
                             <div key={secret} className="secret-item">
                               ✓ {secret.replace(/_/g, ' ')}
@@ -1761,7 +1813,7 @@ function App() {
                   <div className="mobile-secret-content">
                     <div className="secret-list">
                       {secretProgress.found_secrets
-                        .filter(secret => secret !== 'chess_victory' && secret !== 'theme_kabouter')
+                        .filter(secret => secret !== 'chess_victory' && secret !== 'theme_kabouter' && secret !== 'legendary_theme')
                         .map(secret => (
                           <div key={secret} className="secret-item">
                             ✓ {secret.replace(/_/g, ' ')}

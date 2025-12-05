@@ -498,7 +498,8 @@ ALL_SECRETS = [
     'hollow_knight',   # Playing Hollow Knight game
     'tweak_game',      # Playing IWBTC (tweak game)
     'simo_peek',       # SIMO peeking up from bottom
-    'sacha_names'      # Sacha names ramping sequence with applause
+    'sacha_names',     # Sacha names ramping sequence with applause
+    'legendary_theme'  # Unlocking legendary theme (100% completion)
 ]
 
 @app.route('/api/secret/discover', methods=['POST'])
@@ -557,12 +558,16 @@ def get_secret_progress():
     found_secrets = UserSecret.query.filter_by(user_id=user.id).all()
     found_codes = [s.secret_code for s in found_secrets]
     
-    total_found = len(found_codes)
-    percentage = round((total_found / len(ALL_SECRETS)) * 100)
+    # Calculate percentage excluding legendary_theme (it's a reward, not a requirement)
+    secrets_for_completion = [s for s in ALL_SECRETS if s != 'legendary_theme']
+    found_for_completion = [s for s in found_codes if s != 'legendary_theme']
+    
+    total_found = len(found_for_completion)
+    percentage = round((total_found / len(secrets_for_completion)) * 100)
     
     return jsonify({
         'total_found': total_found,
-        'total_secrets': len(ALL_SECRETS),
+        'total_secrets': len(secrets_for_completion),
         'percentage': percentage,
         'found_secrets': found_codes,
         'all_secrets': ALL_SECRETS
