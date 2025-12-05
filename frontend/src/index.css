@@ -2358,6 +2358,56 @@ body:not(.theme-kabouter):not(.theme-chess)::before {
   width: auto;
 }
 
+/* ============ DERK TWEAK FLASH ============ */
+.derk-flash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100003;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: derkFlashIn 0.1s ease-out forwards;
+}
+
+@keyframes derkFlashIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.derk-flash-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 0 60px rgba(255, 68, 68, 0.8);
+  animation: derkPulse 0.5s ease-in-out;
+}
+
+@keyframes derkPulse {
+  0% {
+    transform: scale(0.8);
+    filter: brightness(2);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
 /* ============ HOLLOW KNIGHT GAME POPUP ============ */
 .hollow-knight-overlay {
   position: fixed;

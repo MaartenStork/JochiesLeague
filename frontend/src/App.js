@@ -99,6 +99,7 @@ function App() {
 
   // IWBTC game popup (Tweak game)
   const [showIwbtc, setShowIwbtc] = useState(false);
+  const [showDerkFlash, setShowDerkFlash] = useState(false);
 
   // Secret tracking
   const [secretProgress, setSecretProgress] = useState(null);
@@ -718,7 +719,12 @@ function App() {
       case 'tweak':
       case 'tweaker':
       case 'tweaking':
-        setShowIwbtc(true);
+        // Flash Derk image first, then show game
+        setShowDerkFlash(true);
+        setTimeout(() => {
+          setShowDerkFlash(false);
+          setShowIwbtc(true);
+        }, 500); // Show flash for 500ms (half second)
         discoverSecret('tweak_game');
         break;
       case 'smiling friends':
@@ -1976,6 +1982,17 @@ function App() {
           >
             <source src="/FOX.webm" type="video/webm" />
           </video>
+        </div>
+      )}
+
+      {/* Derk Tweak Flash */}
+      {showDerkFlash && (
+        <div className="derk-flash-overlay">
+          <img 
+            src="/derktweak.jpeg"
+            alt="Derk Tweak"
+            className="derk-flash-img"
+          />
         </div>
       )}
 
